@@ -1,0 +1,1938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>North Cluster OHC Register</title>
+<meta name="theme-color" content="#75479c">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+/* Palette follows the Adani blue / violet / magenta family. Layout: gradient masthead, dark tab rail, paper-white ledger body. */
+:root{
+  --bg:#f3f1f8; --surface:#ffffff; --ink:#1b1830; --muted:#5b5873; --line:#dcd8ea;
+  --a1:#0b74b0; --a2:#75479c; --a3:#bd3861;
+  --accent:#0b74b0; --accent-ink:#ffffff; --soft:#e7f0f8; --soft2:#f1eaf7;
+  --bar:#171433; --bar-ink:#f1effa;
+  --grad:linear-gradient(100deg,#0b74b0 0%,#75479c 55%,#bd3861 100%);
+  --good:#1d7a3c; --goodbg:#dff2e4; --warn:#8f4a00; --warnbg:#fbe9cd; --bad:#b3261e; --badbg:#fbe0dd;
+  --note:#fff1a8; --note-ink:#4a3b00; --note-edge:#d99a00;
+  --shadow:0 1px 2px rgba(30,20,60,.06),0 6px 18px rgba(30,20,60,.07);
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#100e1d; --surface:#1b1930; --ink:#ecebf8; --muted:#a6a3c0; --line:#34314f;
+    --accent:#4db4ea; --accent-ink:#05202f; --soft:#143246; --soft2:#2a1f3d;
+    --bar:#0a0916; --bar-ink:#ecebf8;
+    --good:#6fd08b; --goodbg:#153a22; --warn:#f0b45c; --warnbg:#3d2c10; --bad:#ff8b82; --badbg:#44201d;
+    --note:#4a3b05; --note-ink:#ffe27a; --note-edge:#f2c230;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#100e1d; --surface:#1b1930; --ink:#ecebf8; --muted:#a6a3c0; --line:#34314f;
+  --accent:#4db4ea; --accent-ink:#05202f; --soft:#143246; --soft2:#2a1f3d;
+  --bar:#0a0916; --bar-ink:#ecebf8;
+  --good:#6fd08b; --goodbg:#153a22; --warn:#f0b45c; --warnbg:#3d2c10; --bad:#ff8b82; --badbg:#44201d;
+  --note:#4a3b05; --note-ink:#ffe27a; --note-edge:#f2c230;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nil{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* masthead */
+.top{background:var(--grad);color:#fff;padding-top:env(safe-area-inset-top,0px)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.logo{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.07em;background:#fff;color:#75479c;padding:3px 10px;border-radius:4px;flex:none}
+.b1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.02em;line-height:1.05}
+.b2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;flex:none}
+.who span{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.lite{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);color:#fff}
+.btn.lite:hover{background:rgba(255,255,255,.28)}
+
+/* tab rail */
+.tabsbar{position:sticky;top:0;z-index:20;background:var(--bar);color:var(--bar-ink)}
+.tabs{max-width:1180px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0 max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px))}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{position:relative;flex:none;color:var(--bar-ink);text-decoration:none;font-size:14px;font-weight:500;padding:11px 12px;opacity:.78;white-space:nowrap}
+.tabs a:hover{opacity:1}
+.tabs a[aria-current="page"]{opacity:1;font-weight:600}
+.tabs a[aria-current="page"]::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:2px;background:var(--grad)}
+
+/* duty strip + alerts */
+.duty{background:var(--surface);border-bottom:1px solid var(--line)}
+.duty-in{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));font-size:13px}
+.duty-in label{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600}
+.duty-in select,.duty-in input{min-height:34px;padding:4px 8px;font-size:14px;width:auto;min-width:0}
+.duty-in input{width:190px;max-width:100%}
+.shiftnow{color:var(--muted);font-size:12px}
+.alerts{max-width:1180px;margin:0 auto;display:grid;gap:8px;padding:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.alerts:empty{display:none}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--note-edge);background:var(--note);color:var(--note-ink);border-radius:8px;animation:blink 1.5s ease-in-out infinite}
+.note .nb{flex:1;min-width:0;overflow-wrap:anywhere}
+.note small{display:block;opacity:.85;font-size:12px;margin-top:2px}
+@keyframes blink{0%,100%{background:var(--note)}50%{background:#ffb703;color:#2b1d00;border-color:#b45f06}}
+.alert{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 12px;border-radius:8px;background:var(--warnbg);color:var(--warn);border:1px solid var(--warn);font-weight:500}
+.alert.bad{background:var(--badbg);color:var(--bad);border-color:var(--bad)}
+.notebar{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+
+/* page */
+main{max-width:1180px;margin:0 auto;padding-block:18px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--f-display);font-weight:700;font-size:32px;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;letter-spacing:.02em;margin-bottom:10px}
+h3{font-size:15px}
+.reg-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.reg-head p{color:var(--muted);margin-top:2px;max-width:60ch}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:9px 14px;cursor:pointer;font-weight:500;min-height:40px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:default}
+
+/* home */
+.sitechips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 18px}
+.sitechip{font-size:13px;font-weight:600;padding:4px 11px;border-radius:99px;background:var(--soft2);color:var(--ink)}
+.possec{margin-bottom:22px}
+.poshead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.poshead h2{margin:0}
+.count-chip{font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.tcard{display:flex;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0;box-shadow:var(--shadow)}
+.ava{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--grad);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-size:28px;font-weight:700;flex:none;overflow:hidden}
+.tinfo{min-width:0;flex:1;display:grid;gap:1px;align-content:start}
+.tinfo b{font-size:16px;overflow-wrap:anywhere}
+.tinfo .d{font-weight:500}
+.tinfo .m{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tinfo .row{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.ondutybox{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:18px}
+.ondutybox b{font-family:var(--f-display);font-size:22px;font-weight:700;letter-spacing:.02em}
+
+/* overview */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 24px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-family:var(--f-display);font-weight:700;font-size:38px;line-height:1;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.flag b{color:var(--bad)}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:26px}
+.shelfitem{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);min-width:0}
+.shelfitem a.t{color:inherit;text-decoration:none}
+.shelfitem h3{font-family:var(--f-display);font-weight:600;font-size:20px;letter-spacing:.02em}
+.shelfitem .meta{font-size:13px;color:var(--muted);flex:1}
+.shelfitem .row{display:flex;gap:8px}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.panel-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.hint{color:var(--muted);font-size:14px}
+.lowrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.lowrow:first-of-type{border-top:0}
+.lowrow div{min-width:0}
+.lowrow small{display:block;color:var(--muted)}
+.bars{display:grid;gap:7px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:14px}
+.bar-row .track{grid-column:1/-1;height:6px;background:var(--soft);border-radius:3px;overflow:hidden}
+.bar-row .track i{display:block;height:100%;background:var(--grad);border-radius:3px}
+
+/* waste swatches */
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.25);flex:none}
+.sw-Yellow{background:#e8b900}.sw-Red{background:#c8372d}.sw-White{background:#fff;border-color:#8a979c}.sw-Blue{background:#2b6cb0}.sw-Liquid{background:#2aa6a6}
+.bmw{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.bmw div{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface)}
+.bmw b{display:block;font-family:var(--f-display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.bmw small{display:block;color:var(--muted);font-size:12px;line-height:1.3;margin-top:2px}
+.stock{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.stockchip{display:inline-flex;gap:8px;align-items:baseline;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 10px;font-size:13px}
+.stockchip b{font-family:var(--f-mono);font-weight:500}
+.stockchip.low{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+
+/* tools + lists */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px}
+.tools input[type=search]{flex:1 1 220px;min-width:0}
+.tools label{display:grid;gap:2px;font-size:12px;color:var(--muted)}
+.tools select,.tools input[type=month]{width:auto;min-width:130px}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font-size:16px;min-height:42px;width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+input[readonly]{background:var(--soft);font-family:var(--f-mono)}
+.count{font-size:13px;color:var(--muted);margin:6px 0 10px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft2);color:var(--ink)}
+.chip.t-good{background:var(--goodbg);color:var(--good)}.chip.t-warn{background:var(--warnbg);color:var(--warn)}.chip.t-bad{background:var(--badbg);color:var(--bad)}
+.vbad{color:var(--bad);font-weight:600}
+.tablewrap{display:none;overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{position:sticky;top:0;text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--a2);padding:9px 10px;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;max-width:260px;overflow-wrap:anywhere}
+tbody tr{cursor:pointer}
+tbody tr:nth-child(even){background:var(--soft2)}
+tbody tr:hover{background:var(--soft)}
+td.sr,td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cards{display:grid;gap:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;cursor:pointer;display:grid;gap:4px;min-width:0}
+.card:hover{border-color:var(--muted)}
+.c-top{display:flex;align-items:center;gap:8px;min-width:0}
+.c-top h3{font-size:16px;font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+.sr{font-family:var(--f-mono);font-size:12px;color:var(--muted);flex:none}
+.c-sub{font-size:13px;color:var(--muted)}
+.c-body{overflow-wrap:anywhere}
+.c-time{font-size:12px;color:var(--muted)}
+.empty{border:1.5px dashed var(--line);border-radius:8px;padding:28px 18px;text-align:center;display:grid;gap:10px;justify-items:center;background:var(--surface)}
+.empty p{max-width:42ch;color:var(--muted)}
+.more{display:block;margin:12px auto 0}
+@media (min-width:760px){.tablewrap{display:block}.cards{display:none}}
+
+/* data page */
+.listrow{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.listrow:first-of-type{border-top:0}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--soft2);border-radius:99px;padding:3px 4px 3px 10px;font-size:13px}
+.pill button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:2px 6px;border-radius:99px}
+.pill button:hover{color:var(--bad)}
+.addline{display:flex;gap:6px}
+.addline input{min-height:36px;padding:4px 8px;font-size:14px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.filebtn{position:relative;cursor:pointer;display:inline-flex;align-items:center}
+
+/* sheets and modals */
+.sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+#modal{z-index:60}
+.scrim{position:absolute;inset:0;background:rgba(10,8,30,.6)}
+.panel{position:relative;background:var(--surface);width:100%;max-width:680px;max-height:92vh;max-height:92dvh;overflow-y:auto;border-radius:14px 14px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.panel.small{max-width:420px}
+@media (min-width:700px){.sheet{align-items:center}.panel{border-radius:12px;padding:20px 22px}}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.panel-h h2{margin:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .wide{grid-column:1/-1}
+.metarow{background:var(--soft2);border-radius:8px;padding:10px;margin-bottom:12px}
+.pblock{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pblock .wide{grid-column:1/-1}
+.fld{display:grid;gap:3px;min-width:0;align-content:start}
+.fld label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.fld .req{color:var(--bad)}
+.fld.bad input,.fld.bad select,.fld.bad textarea{border-color:var(--bad)}
+.ferr{color:var(--bad);font-size:12px}
+.fhint{color:var(--muted);font-size:12px}
+.formerr,.mmsg{color:var(--bad);font-size:14px;margin-top:10px;min-height:0}
+.foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.foot .spacer{flex:1}
+.rowsh{margin:16px 0 8px;font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:.02em}
+.rowcard{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--surface)}
+.rowcard .rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px;font-size:12px;cursor:pointer}
+.chips button:hover{border-color:var(--accent)}
+.photoline{display:flex;align-items:center;gap:12px}
+.bigcode{font-family:var(--f-mono);font-size:30px;font-weight:500;letter-spacing:.18em;text-align:center;background:var(--soft2);border-radius:8px;padding:14px;margin:10px 0}
+.dlrow{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.dlrow input{min-height:38px}
+
+/* gate */
+.gate{position:fixed;inset:0;z-index:100;background:var(--grad);display:grid;place-items:center;padding:16px;overflow:auto}
+.gate-card{background:var(--surface);border-radius:14px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(20,10,50,.35);display:grid;gap:12px}
+.gate-card h1{font-size:30px}
+.gate-card .code{font-family:var(--f-mono);font-size:24px;letter-spacing:.25em;text-align:center;text-transform:uppercase}
+.gate-card .sub{color:var(--muted);font-size:14px}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px 0;text-align:left;font-weight:500}
+
+.credit{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bar);color:var(--bar-ink);text-align:center;font-size:11px;line-height:1.35;padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));opacity:.97}
+.credit i{display:block;opacity:.85}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:70;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100vw - 32px);box-shadow:var(--shadow)}
+@media (prefers-reduced-motion:no-preference){.panel{animation:rise .18s ease-out}@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}}
+@media (prefers-reduced-motion:reduce){.note{animation:none;border-width:3px}}
+@media (max-width:480px){.b1{font-size:22px}.who span{display:none}.grid,.pblock{grid-template-columns:1fr}.grid .wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<div id="gate" class="gate" hidden></div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">
+        <span class="logo">OHC</span>
+        <div>
+          <div class="b1">North Cluster OHC</div>
+          <div class="b2">Darlaghat &middot; Occupational Health Centre</div>
+        </div>
+      </div>
+      <div class="who"><span id="sheetSt" class="shiftnow" aria-live="polite"></span><span id="cloudSt" class="shiftnow" aria-live="polite"></span><span id="whoName"></span><button type="button" class="btn sm lite" data-a="lock">Lock</button></div>
+    </div>
+  </header>
+  <nav class="tabsbar" aria-label="Pages"><div id="tabs" class="tabs"></div></nav>
+  <div class="duty">
+    <div class="duty-in">
+      <label for="dShift">Shift
+        <select id="dShift"></select>
+      </label>
+      <label for="dLoc">Duty location
+        <select id="dLoc"></select>
+      </label>
+      <label for="dNurse">Staff nurse on duty
+        <input id="dNurse" list="dl_dutynurse" autocomplete="off" placeholder="Name">
+      </label>
+      <datalist id="dl_dutynurse"></datalist>
+      <span class="shiftnow" id="shiftNow"></span>
+    </div>
+  </div>
+  <div id="alerts" class="alerts"></div>
+  <main id="view"></main>
+</div>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="scrim" data-a="close"></div>
+  <form id="form" class="panel" novalidate></form>
+</div>
+<div id="modal" class="sheet" hidden>
+  <div class="scrim" data-a="mcancel"></div>
+  <div id="mbox" class="panel small"></div>
+</div>
+
+<footer class="credit">
+  <i>&ldquo;Healing Everyone &#10084;&#65039;&#8205;&#129657;&rdquo;</i>
+  Web App Designed By Shri Vardhan Joshi, Sr. Nursing Officer
+</footer>
+<div id="toast" class="toast" role="status" hidden></div>
+<script>
+(function(){
+"use strict";
+/* ===================== CLOUD SETTINGS (edit only these two lines) =====================
+   Paste the Supabase "Project URL" and the "anon / publishable key" between the quotes.
+   While they are empty, the app works in the old single-device mode. */
+const CLOUD_URL="";
+const CLOUD_KEY="";
+
+/* ===================== GOOGLE SHEET SETTINGS (optional) =====================
+   Paste the Apps Script "Web app URL" and the same secret word you put inside the script.
+   While empty, nothing is sent to Google Sheets. */
+const SHEET_URL="";
+const SHEET_KEY="";
+
+/* ===================== helpers ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const p2=n=>String(n).padStart(2,"0");
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())};
+const nowStr=()=>{const d=new Date();return p2(d.getHours())+":"+p2(d.getMinutes())};
+const dmy=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||"")?s.slice(8)+"-"+s.slice(5,7)+"-"+s.slice(0,4):(s==null?"":String(s));
+const fmtDate=s=>{if(!s)return "";const d=new Date(s+"T00:00:00");return isNaN(d)?s:d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"2-digit"})};
+const monthLabel=m=>{const d=new Date(m+"-01T00:00:00");return isNaN(d)?m:d.toLocaleDateString("en-IN",{month:"long",year:"numeric"})};
+const srFmt=n=>String(n||0).padStart(4,"0");
+const newId=p=>(p||"e")+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const hex=buf=>Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+const lc=s=>String(s==null?"":s).toLowerCase().trim();
+
+/* ===================== constants ===================== */
+const CENTRE="North Cluster OHC",LOC="Darlaghat";
+const DESIGNER="Shri Vardhan Joshi, Sr. Nursing Officer";
+const SITES=["OHC Darlaghat","OHC Kaslog Mines","OHC Mangu Mines"];
+const SHIFTS=[["G","G Shift (9 am - 6 pm)"],["A","A Shift (6 am - 2 pm)"],["B","B Shift (2 pm - 10 pm)"],["C","C Shift (10 pm - 6 am)"]];
+const PTYPES=["Company Employee","Contract Employee / Worker","Outsider","Dependent"];
+const RELATIONS=["Father","Mother","Brother","Sister","Wife","Husband","Son","Daughter","Other"];
+const ORDER=["opd","medicine","h1","waste","referral","doctor","requirement","steril"];
+const DEF_LISTS={
+  outcome:["Treated - Back to Duty","Treated - Sent Home","First Aid Given","Dressing Done","Injection / IV Given","Nebulization Given","Observation at OHC","Rest Advised","Medical Leave Advised","Follow-up Advised","Doctor On Call Consulted","Referred to Hospital","Referred - Emergency (Ambulance)","Left Without Treatment"],
+  escort:["Doctor","Relative","Co-worker","Supervisor","Security Guard","Staff Nurse","Friend","Driver only","No escort"],
+  outsider:["Truck Driver","Villager","Visitor","Vendor / Supplier","Student / Trainee"],
+  reqReason:["Low Stock","Medicine For Camp","Medicine For Shutdown","Medicine Required For Mines"],
+  refStatus:["Follow-up pending","Admitted","Returned to duty","Closed"],
+  positions:["Medical Officer","Sr. Nursing Officer","Staff Nurse","Pharmacist","Lab Technician","OHC Assistant","Ambulance Driver","Attendant"]
+};
+const LIST_LABELS={outcome:"Outcomes (OPD and doctor calls)",escort:"Escort types",outsider:"Outsider types",reqReason:"Medicine requirement reasons",refStatus:"Referral status",positions:"Staff positions"};
+const DEF_DOCTORS=["Dr. Pradeep Kumar Sharma","Dr. Bhanu Gupta","Dr. Bhuvesh Guleria","Dr. Manoj Kumar"];
+const OPD_NORMAL="Normal: BP 90-120 / 60-80, Pulse 60-100, Temp 97-99 F, SpO2 95-100";
+
+/* ===================== state + storage ===================== */
+const S={maxsr:{},reg:{},staff:[],doctors:[],lists:{},notes:[],audit:[],cfg:{},duty:{shift:"",nurse:"",loc:""},meId:null};
+const ld=(key,def)=>{try{const r=localStorage.getItem(key);return r?JSON.parse(r):def}catch(e){return def}};
+let warnedFull=false;
+const sv=(key,val)=>{try{localStorage.setItem(key,JSON.stringify(val));if(CLOUD&&!applying&&SYNC_KEYS.has(key))scheduleFlush();else if(SHEET_ON&&!CLOUD&&!applying&&SYNC_KEYS.has(key))scheduleSheet();return true}catch(e){if(!warnedFull){warnedFull=true;toast("Device storage is full. Download a backup file now.")}return false}};
+function randKey(n){const a=new Uint8Array(n);crypto.getRandomValues(a);return hex(a)}
+function loadAll(){
+  ORDER.forEach(k=>{const v=ld("ohc_"+k,[]);S.reg[k]=Array.isArray(v)?v:[]});
+  S.staff=ld("ohc_staff",[]);
+  const dc=ld("ohc_doctors",null);
+  S.doctors=Array.isArray(dc)?dc:null;
+  const stored=ld("ohc_lists",{});
+  S.lists={};Object.keys(DEF_LISTS).forEach(k=>{S.lists[k]=Array.isArray(stored[k])?stored[k]:DEF_LISTS[k].slice()});
+  S.notes=ld("ohc_notes",[]);
+  S.audit=ld("ohc_audit",[]);
+  S.cfg=ld("ohc_cfg",{});
+  let dirty=false;
+  if(!S.cfg.salt){S.cfg.salt=randKey(16);dirty=true}
+  if(dirty)sv("ohc_cfg",S.cfg);
+  if(S.doctors===null){S.doctors=DEF_DOCTORS.map((n,i)=>({id:"d_def"+i,name:n,phone:"",updatedAt:0}));sv("ohc_doctors",S.doctors)}
+  S.duty=Object.assign({shift:"",nurse:"",loc:""},ld("ohc_duty",{}));
+  sheetInit();
+}
+const persist=k=>sv("ohc_"+k,S.reg[k]);
+const optList=key=>key==="doctors"?S.doctors.map(d=>d.name):(S.lists[key]||[]);
+function addOpt(key,val){
+  val=String(val||"").trim();if(!val)return;
+  if(key==="doctors"){if(!S.doctors.some(d=>lc(d.name)===lc(val))){S.doctors.push({id:newId("d"),name:val,phone:"",updatedAt:Date.now()});sv("ohc_doctors",S.doctors)}return}
+  const L=S.lists[key]||(S.lists[key]=[]);
+  if(!L.some(x=>lc(x)===lc(val))){L.push(val);sv("ohc_lists",S.lists)}
+}
+function putRecords(k,recs){
+  const before=S.reg[k].slice();
+  recs.forEach(r=>{const i=S.reg[k].findIndex(x=>x.id===r.id);if(i<0)S.reg[k].push(r);else S.reg[k][i]=r});
+  if(!persist(k)){S.reg[k]=before;return false}
+  return true;
+}
+const nextSr=k=>Math.max(S.reg[k].reduce((m,e)=>Math.max(m,e.sr||0),0),(S.maxsr&&S.maxsr[k])||0)+1;
+
+/* ===================== auth ===================== */
+const curUser=()=>S.staff.find(s=>s.id===S.meId)||null;
+const isAdmin=()=>{const u=curUser();return !!u&&u.role==="admin"};
+async function hashCode(code){
+  if(!window.crypto||!crypto.subtle)throw new Error("nocrypto");
+  const enc=new TextEncoder();
+  const key=await crypto.subtle.importKey("raw",enc.encode(String(code).trim().toUpperCase()),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:enc.encode(S.cfg.salt),iterations:60000,hash:"SHA-256"},key,256);
+  return hex(bits);
+}
+async function verifyMyCode(code){const u=curUser();if(!u||!u.codeHash)return false;try{return (await hashCode(code))===u.codeHash}catch(e){return false}}
+function makeCode(){const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=new Uint8Array(6);crypto.getRandomValues(a);return Array.from(a).map(b=>A[b%A.length]).join("")}
+async function codeTaken(hash,exceptId){return S.staff.some(s=>s.codeHash&&s.codeHash===hash&&s.id!==exceptId)}
+
+/* visibility: admin sees everything, staff see only entries they made */
+const vis=k=>isAdmin()?S.reg[k]:S.reg[k].filter(e=>e.uid===S.meId);
+
+/* ===================== audit log (append only) ===================== */
+function logDelete(kind,rec,label){
+  S.audit.push({id:newId("a"),ts:Date.now(),byId:S.meId,byName:(curUser()||{}).name||"",kind:kind,recId:rec.id,sr:rec.sr||"",label:label||"",snapshot:rec});
+  if(!sv("ohc_audit",S.audit)){S.audit.pop();toast("Could not record the deletion, so nothing was deleted");return false}
+  return true;
+}
+
+/* ===================== toast + modal ===================== */
+let toastT;
+function toast(m){const t=$("#toast");if(!t)return;t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},2800)}
+let modalRes=null;
+function modal(o){
+  return new Promise(res=>{
+    const m=$("#modal"),b=$("#mbox");
+    b.innerHTML='<div class="panel-h"><h2>'+esc(o.title)+'</h2></div>'+(o.body||"")+
+      (o.input?'<div class="fld" style="margin-top:8px"><input id="mIn" type="'+(o.input.type||"text")+'" placeholder="'+esc(o.input.ph||"")+'" autocomplete="off"'+(o.input.type==="password"?' autocapitalize="characters" spellcheck="false"':"")+'></div>':"")+
+      '<div class="mmsg" id="mMsg" role="alert"></div><div class="foot"><button type="button" class="btn '+(o.danger?"danger":"primary")+'" id="mOk">'+esc(o.ok||"OK")+'</button>'+(o.cancel===false?"":'<button type="button" class="btn" id="mNo">Cancel</button>')+'</div>';
+    m.hidden=false;
+    const done=v=>{m.hidden=true;modalRes=null;res(v)};
+    modalRes=()=>done(null);
+    const ok=async()=>{
+      const v=o.input?$("#mIn").value:true;
+      if(o.input&&!String(v).trim()){$("#mMsg").textContent="Enter a value";return}
+      if(o.validate){const msg=await o.validate(v);if(msg){$("#mMsg").textContent=msg;return}}
+      done(v);
+    };
+    $("#mOk").addEventListener("click",ok);
+    const no=$("#mNo");if(no)no.addEventListener("click",()=>done(null));
+    const inp=$("#mIn");if(inp){inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();ok()}});setTimeout(()=>inp.focus(),30)}else setTimeout(()=>$("#mOk").focus(),30);
+  });
+}
+/* every delete asks the person's own unique code */
+function askCode(what){
+  return modal({title:"Enter your code to delete",body:'<p class="hint">'+esc(what)+'<br>The deletion will be recorded permanently with your name.</p>',input:{type:"password",ph:"Your unique code"},ok:"Delete",danger:true,
+    validate:async v=>{const ok=await verifyMyCode(v);return ok?null:"This code is not correct."}});
+}
+
+/* ===================== cloud sync (Supabase) ===================== */
+const CLOUD=/^https?:\/\//.test(CLOUD_URL)&&CLOUD_KEY.length>10;
+const TOK_K="ohc_tok",PEND_K="ohc_pending";
+const SYNC_KEYS=new Set(ORDER.map(k=>"ohc_"+k).concat(["ohc_staff","ohc_doctors","ohc_lists","ohc_notes","ohc_audit"]));
+let applying=false,snap=null,chain=Promise.resolve(),flushT=null,retryT=null,netWarned=false;
+const getTok=()=>{try{return sessionStorage.getItem(TOK_K)||localStorage.getItem(TOK_K)}catch(e){return null}};
+function setTok(t,keep){try{sessionStorage.removeItem(TOK_K);localStorage.removeItem(TOK_K);if(t)(keep?localStorage:sessionStorage).setItem(TOK_K,t)}catch(e){}}
+const isPending=()=>{try{return localStorage.getItem(PEND_K)==="1"}catch(e){return false}};
+const setPending=v=>{try{if(v)localStorage.setItem(PEND_K,"1");else localStorage.removeItem(PEND_K)}catch(e){}};
+async function rpc(fn,p){
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),25000);
+  try{
+    const r=await fetch(CLOUD_URL.replace(/\/+$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":CLOUD_KEY,"Content-Type":"application/json"},body:JSON.stringify({p:p||{}}),signal:ctl.signal});
+    if(!r.ok)throw new Error("http"+r.status);
+    return await r.json();
+  }finally{clearTimeout(to)}
+}
+function cloudStatus(t,bad){const e=$("#cloudSt");if(e){e.textContent=t;e.style.color=bad?"#b45309":"#15803d"}}
+/* called from sv() whenever synced data changes on this device */
+function scheduleFlush(){
+  setPending(true);cloudStatus("Saving...",false);
+  clearTimeout(flushT);flushT=setTimeout(()=>{flush()},500);
+}
+function snapOf(){
+  const m={};
+  ORDER.forEach(k=>S.reg[k].forEach(e=>{m["e:"+k+":"+e.id]=JSON.stringify(e)}));
+  S.audit.forEach(a=>{m["a:"+a.id]="1"});
+  ["doctors","notes","lists"].forEach(d=>{m["d:"+d]=JSON.stringify(S[d])});
+  if(isAdmin())m["d:staff"]=JSON.stringify(S.staff);
+  return m;
+}
+function buildOps(cur){
+  const ops=[],adm=isAdmin();
+  ORDER.forEach(k=>{
+    const items=S.reg[k].filter(e=>(adm||e.uid===S.meId)&&(!snap||snap["e:"+k+":"+e.id]!==cur["e:"+k+":"+e.id]));
+    for(let i=0;i<items.length;i+=200)ops.push({t:"entries",reg:k,items:items.slice(i,i+200)});
+  });
+  S.audit.forEach(a=>{if(a.byId===S.meId&&(!snap||!snap["a:"+a.id]))ops.push({t:"audit",item:a})});
+  ["doctors","notes","lists"].concat(adm?["staff"]:[]).forEach(d=>{
+    if(!snap||snap["d:"+d]!==cur["d:"+d])ops.push({t:"doc",key:d,value:S[d]});
+  });
+  return ops;
+}
+function flush(){chain=chain.then(doFlush,doFlush);return chain}
+async function doFlush(){
+  if(!CLOUD||!getTok()||!S.meId)return true;
+  const pre=snapOf(),ops=buildOps(pre);
+  if(!ops.length){setPending(false);cloudStatus("Saved in cloud",false);return true}
+  try{
+    const r=await rpc("ohc_push",{tok:getTok(),ops:ops});
+    if(r.error==="auth"){cloudStatus("Login expired",true);toast("Login expire ho gaya. Lock karke dobara code se login karein.");return false}
+    if(r.error){cloudStatus("Not saved",true);toast("Cloud save nahi hua ("+r.error+")");return false}
+    snap=pre;applySr(r.sr||{});netWarned=false;scheduleSheet();
+    if(!buildOps(snapOf()).length){setPending(false);cloudStatus("Saved in cloud",false)}
+    else{cloudStatus("Saving...",false);setTimeout(flush,300)}
+    return true;
+  }catch(e){
+    cloudStatus("Offline - will upload",true);
+    if(!netWarned){netWarned=true;toast("Internet nahi hai. Data is device par safe hai, net aate hi cloud mein chala jayega.")}
+    clearTimeout(retryT);retryT=setTimeout(flush,20000);
+    return false;
+  }
+}
+/* the server gives every new entry its final serial number */
+function applySr(map){
+  const ids=Object.keys(map);if(!ids.length)return;
+  applying=true;
+  ORDER.forEach(k=>{
+    let ch=false;
+    S.reg[k].forEach(e=>{if(map[e.id]!=null&&e.sr!==map[e.id]){e.sr=map[e.id];ch=true;if(snap)snap["e:"+k+":"+e.id]=JSON.stringify(e)}});
+    if(ch)persist(k);
+  });
+  applying=false;
+}
+async function pullAll(){
+  const r=await rpc("ohc_pull",{tok:getTok()});
+  if(r.error)throw new Error(r.error);
+  applying=true;
+  ORDER.forEach(k=>{S.reg[k]=(r.entries&&r.entries[k])||[];persist(k)});
+  S.staff=r.staff||[];sv("ohc_staff",S.staff);
+  if(r.salt){S.cfg.salt=r.salt;sv("ohc_cfg",S.cfg)}
+  if(Array.isArray(r.doctors)){S.doctors=r.doctors;sv("ohc_doctors",S.doctors)}
+  const L=r.lists||{};S.lists={};Object.keys(DEF_LISTS).forEach(k=>{S.lists[k]=Array.isArray(L[k])?L[k]:DEF_LISTS[k].slice()});sv("ohc_lists",S.lists);
+  S.notes=Array.isArray(r.notes)?r.notes:[];sv("ohc_notes",S.notes);
+  S.audit=r.audit||[];sv("ohc_audit",S.audit);
+  S.maxsr=r.maxsr||{};
+  applying=false;
+  snap=snapOf();sheetMarkPulled();
+  if(!Array.isArray(r.doctors))delete snap["d:doctors"];
+  if(!r.lists)delete snap["d:lists"];
+  return r.me;
+}
+function wipeCache(){
+  try{ORDER.forEach(k=>localStorage.removeItem("ohc_"+k));["ohc_staff","ohc_doctors","ohc_lists","ohc_notes","ohc_audit",PEND_K].forEach(k=>localStorage.removeItem(k))}catch(e){}
+  ORDER.forEach(k=>{S.reg[k]=[]});S.staff=[];S.notes=[];S.audit=[];S.maxsr={};
+  S.doctors=DEF_DOCTORS.map((n,i)=>({id:"d_def"+i,name:n,phone:"",updatedAt:0}));
+  S.lists={};Object.keys(DEF_LISTS).forEach(k=>{S.lists[k]=DEF_LISTS[k].slice()});
+  snap=null;
+}
+async function cloudEnter(id){
+  S.meId=id;
+  if(isPending()){try{snap=null;await flush()}catch(e){}}
+  const me=await pullAll();
+  S.meId=me;
+  enter(me,false);
+  cloudStatus("Saved in cloud",false);
+  flush();
+}
+async function cloudLock(){
+  closeForm();$("#modal").hidden=true;
+  const ok=await flush();
+  const tok=getTok();
+  if(ok&&tok){try{await rpc("ohc_logout",{tok:tok})}catch(e){}}
+  setTok(null);
+  try{sessionStorage.removeItem("ohc_sid");localStorage.removeItem(LS_KEEP)}catch(e){}
+  if(ok)wipeCache();else toast("Kuch data abhi upload nahi hua. Woh is device par safe hai, agli baar login par upload hoga.");
+  S.meId=null;snap=null;showGate();
+}
+async function refreshCloud(manual){
+  if(!CLOUD||!S.meId||!getTok())return;
+  if(!manual&&(!$("#sheet").hidden||!$("#modal").hidden))return;
+  const ok=await flush();
+  if(!ok){if(manual)toast("Abhi upload nahi ho pa raha. Internet check karein.");return}
+  try{await pullAll();route();renderAlerts();if(manual)toast("Latest data aa gaya")}
+  catch(e){if(String(e.message)==="auth"){cloudStatus("Login expired",true);if(manual)toast("Login expire ho gaya. Lock karke dobara login karein.")}else if(manual)toast("Internet nahi hai.")}
+}
+async function showGateCloud(){
+  const g=$("#gate");
+  const card=(inner)=>'<form class="gate-card" id="gForm" novalidate><div><span class="logo" style="background:var(--grad);color:#fff">OHC</span></div><h1>North Cluster OHC</h1>'+inner+"</form>";
+  g.innerHTML=card('<p class="sub">Connecting to the cloud...</p>');
+  let b;
+  try{b=await rpc("ohc_boot")}
+  catch(e){g.innerHTML=card('<p class="sub">Internet connection nahi mil raha. Net chalu karke Try again dabayein.</p><button type="button" class="btn primary" data-a="gretry">Try again</button>');return}
+  if(b.salt){S.cfg.salt=b.salt;sv("ohc_cfg",S.cfg)}
+  const keepRow='<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" id="gKeep" style="width:auto;min-height:0"> Keep me signed in on this device</label>';
+  if(!b.hasUsers){
+    g.innerHTML=card('<p class="sub">First time setup. Create the admin code. Staff codes are made later from the Team page and work on any phone or computer.</p>'+
+      '<div class="fld"><label for="gName">Your name</label><input id="gName" value="Shri Vardhan Joshi" autocomplete="off"></div>'+
+      '<div class="fld"><label for="gDes">Designation</label><input id="gDes" value="Sr. Nursing Officer" autocomplete="off"></div>'+
+      '<div class="fld"><label for="gCode">Create your unique code (6 or more letters or numbers)</label><input id="gCode" class="code" type="password" autocomplete="new-password" autocapitalize="characters" spellcheck="false"></div>'+
+      '<div class="fld"><label for="gCode2">Type the code again</label><input id="gCode2" class="code" type="password" autocomplete="new-password" autocapitalize="characters" spellcheck="false"></div>'+
+      '<div class="mmsg" id="gMsg" role="alert"></div><button type="submit" class="btn primary">Create and open</button>');
+    $("#gForm").addEventListener("submit",async ev=>{
+      ev.preventDefault();
+      const name=$("#gName").value.trim(),des=$("#gDes").value.trim(),c1=$("#gCode").value.trim(),c2=$("#gCode2").value.trim(),m=$("#gMsg");
+      if(!name){m.textContent="Enter your name.";return}
+      if(c1.length<6){m.textContent="The code needs at least 6 letters or numbers.";return}
+      if(c1!==c2){m.textContent="The two codes do not match.";return}
+      let h;try{S.cfg.salt=randKey(16);h=await hashCode(c1)}catch(e){m.textContent="This browser cannot create secure codes. Open the site through its https link.";return}
+      const u={id:newId("s"),name:name,position:"Sr. Nursing Officer",designation:des,education:"",phone:"",site:"",role:"admin",photo:"",codeHash:h,active:true,updatedAt:Date.now()};
+      m.textContent="Please wait...";
+      try{
+        const r=await rpc("ohc_setup",{salt:S.cfg.salt,staff:u});
+        if(r.error==="exists"){m.textContent="Setup is already done. Reload the page and log in.";return}
+        if(r.error){m.textContent="Could not set up.";return}
+        sv("ohc_cfg",S.cfg);setTok(r.token,false);
+        try{sessionStorage.setItem("ohc_sid",r.id)}catch(e){}
+        wipeCache();S.cfg.salt=S.cfg.salt;
+        await cloudEnter(r.id);
+      }catch(e){m.textContent="Internet problem. Try again."}
+    });
+  }else{
+    g.innerHTML=card('<p class="sub">Enter your unique code to open the registers.</p>'+
+      '<div class="fld"><label for="gCode">Your code</label><input id="gCode" class="code" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false"></div>'+keepRow+
+      '<div class="mmsg" id="gMsg" role="alert"></div><button type="submit" class="btn primary">Open</button>');
+    $("#gForm").addEventListener("submit",async ev=>{
+      ev.preventDefault();
+      const m=$("#gMsg"),code=$("#gCode").value.trim();
+      if(!code){m.textContent="Enter your code.";return}
+      let h;try{h=await hashCode(code)}catch(e){m.textContent="This browser cannot check codes. Open the site through its https link.";return}
+      m.textContent="Please wait...";
+      try{
+        const r=await rpc("ohc_login",{h:h,keep:$("#gKeep").checked});
+        if(r.error==="locked"){m.textContent="Too many wrong tries. Wait a minute.";return}
+        if(r.error){m.textContent="This code is not correct.";return}
+        setTok(r.token,$("#gKeep").checked);
+        try{sessionStorage.setItem("ohc_sid",r.id)}catch(e){}
+        await cloudEnter(r.id);
+      }catch(e){m.textContent="Internet problem. Try again."}
+    });
+  }
+  setTimeout(()=>{const i=$("#gCode")||$("#gName");if(i)try{i.focus()}catch(e){}},50);
+}
+function startCloud(){
+  loadAll();
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshCloud(false)});
+  window.addEventListener("online",()=>{flush()});
+  setInterval(()=>refreshCloud(false),120000);
+  const sid=(()=>{try{return sessionStorage.getItem("ohc_sid")||localStorage.getItem(LS_KEEP)}catch(e){return null}})();
+  const tok=getTok();
+  if(!tok||!sid){showGate();return}
+  S.meId=sid;
+  (async()=>{
+    try{
+      if(isPending()){snap=null;await flush()}
+      const me=await pullAll();S.meId=me;enter(me,false);cloudStatus("Saved in cloud",false);
+    }catch(e){
+      if(String(e&&e.message)==="auth"){setTok(null);S.meId=null;showGate();return}
+      if(S.staff.some(s=>s.id===sid)){enter(sid,false);cloudStatus("Offline - will upload",true);toast("Internet nahi hai. Purana saved data dikh raha hai.");clearTimeout(retryT);retryT=setTimeout(flush,20000)}
+      else{S.meId=null;showGate()}
+    }
+  })();
+}
+
+/* ===================== Google Sheet mirror (Apps Script web app) ===================== */
+const SHEET_ON=/^https:\/\/script\.google\.com\//.test(SHEET_URL)&&SHEET_KEY.length>=4;
+const SS_K="ohc_sheetsnap";
+let sheetSnap=null,sheetT=null,sheetBusy=false,sheetAgain=false,sheetWarned=false;
+const hs=str=>{let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return String(h)};
+const saveSheetSnap=()=>{try{localStorage.setItem(SS_K,JSON.stringify(sheetSnap))}catch(e){}};
+function sheetBaseline(){sheetSnap={};ORDER.forEach(k=>S.reg[k].forEach(e=>{sheetSnap[k+":"+e.id]=hs(JSON.stringify(e))}));S.audit.forEach(a=>{sheetSnap["a:"+a.id]="1"});saveSheetSnap()}
+function sheetInit(){
+  if(!SHEET_ON)return;
+  try{sheetSnap=JSON.parse(localStorage.getItem(SS_K)||"null")}catch(e){sheetSnap=null}
+  if(!sheetSnap)sheetBaseline();
+}
+/* after a cloud pull: entries made by other people were sent by their own devices */
+function sheetMarkPulled(){
+  if(!SHEET_ON)return;
+  if(!sheetSnap){sheetBaseline();return}
+  ORDER.forEach(k=>S.reg[k].forEach(e=>{if(e.uid!==S.meId)sheetSnap[k+":"+e.id]=hs(JSON.stringify(e))}));
+  S.audit.forEach(a=>{if(a.byId!==S.meId)sheetSnap["a:"+a.id]="1"});
+  saveSheetSnap();
+}
+function scheduleSheet(){if(!SHEET_ON)return;clearTimeout(sheetT);sheetT=setTimeout(()=>{sheetFlush(false)},1000)}
+function sheetStatus(t,bad){const e=$("#sheetSt");if(e){e.textContent=t;e.style.color=bad?"#b45309":"#15803d"}}
+const cellSafe=v=>{let s=v==null?"":String(v);return /^[=+@]/.test(s)||/^-[A-Za-z(]/.test(s)?"'"+s:s};
+const regByKind=kind=>ORDER.find(k=>REGS[k].name===kind);
+async function sheetFlush(all){
+  if(!SHEET_ON||!S.meId)return true;
+  if(sheetBusy){sheetAgain=true;return false}
+  sheetBusy=true;
+  let ok=true;
+  try{
+    const ops=[],sent={};
+    ORDER.forEach(k=>{
+      const cols=xlCols(k),head=cols.map(c=>c.l),items=S.reg[k].filter(e=>all||!sheetSnap||sheetSnap[k+":"+e.id]!==hs(JSON.stringify(e)));
+      for(let i=0;i<items.length;i+=80){
+        const part=items.slice(i,i+80);
+        ops.push({t:"rows",tab:REGS[k].tab,head:head,rows:part.map(e=>({id:e.id,v:cols.map(c=>cellSafe(c.get(e)))}))});
+        part.forEach(e=>{sent[k+":"+e.id]=hs(JSON.stringify(e))});
+      }
+    });
+    S.audit.forEach(a=>{
+      if(!all&&sheetSnap&&sheetSnap["a:"+a.id])return;
+      const k=regByKind(a.kind);
+      if(k)ops.push({t:"del",tab:REGS[k].tab,id:a.recId,by:a.byName||"",ts:a.ts});
+      sent["a:"+a.id]="1";
+    });
+    if(ops.length){
+      const r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:SHEET_KEY,ops:ops})});
+      const j=await r.json();
+      if(!j||!j.ok)throw new Error(j&&j.error||"bad");
+      Object.assign(sheetSnap,sent);saveSheetSnap();
+    }
+    sheetWarned=false;sheetStatus("Sheet synced",false);
+  }catch(e){
+    ok=false;sheetStatus("Sheet pending",true);
+    if(!sheetWarned){sheetWarned=true;toast("Google Sheet mein abhi nahi ja paya. Data safe hai, baad mein apne aap chala jayega.")}
+    clearTimeout(sheetT);sheetT=setTimeout(()=>{sheetFlush(false)},30000);
+  }finally{sheetBusy=false;if(sheetAgain){sheetAgain=false;scheduleSheet()}}
+  return ok;
+}
+
+/* ===================== field specs ===================== */
+/* select options may be "text" or [value,label]. dyn = dropdown with "+ Add new" backed by a list. sug = type-ahead suggestions. show = person types where visible. */
+const PF=[
+  {k:"ptype",l:"Person type",t:"select",o:PTYPES,req:1,def:PTYPES[0],wide:1},
+  {k:"empId",l:"Employee ID",t:"text",show:[0],sug:"empId",ph:"e.g. 10234"},
+  {k:"dept",l:"Department",t:"text",show:[0,1],sug:"dept"},
+  {k:"outsider",l:"Who is the person",t:"dyn",dyn:"outsider",show:[2],req:1,wide:1},
+  {k:"relation",l:"Relation with employee",t:"select",o:RELATIONS,show:[3],req:1},
+  {k:"relOf",l:"Company employee (name / ID)",t:"text",show:[3],req:1},
+  {k:"name",l:"Name",t:"text",req:1,wide:1,sug:"pname"},
+  {k:"age",l:"Age",t:"number"},
+  {k:"sex",l:"Sex",t:"select",o:["Male","Female","Other"]}
+];
+const META=[
+  {k:"shift",l:"Shift",t:"select",o:SHIFTS,req:1},
+  {k:"duty",l:"Staff nurse on duty",t:"text",req:1,sug:"duty"},
+  {k:"dloc",l:"Duty location",t:"select",o:SITES}
+];
+const PERSON={t:"person"};
+
+const REGS={
+  opd:{name:"OPD Register",tab:"OPD",
+    hint:"Every visit to the centre: employee, contractor, outsider or dependent, with vitals and outcome.",
+    empty:"No OPD visits recorded yet. Add the first one when someone walks in.",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},{k:"time",l:"Time",t:"time",req:1,def:"now"},
+      PERSON,
+      {k:"complaint",l:"Complaint",t:"text",req:1,wide:1,sug:"self"},
+      {k:"bp",l:"BP (mmHg)",t:"text",def:"120/80",ph:"120/80",hint:"Normal 90-120 / 60-80"},
+      {k:"pulse",l:"Pulse (/min)",t:"number",def:76,hint:"Normal 60-100"},
+      {k:"temp",l:"Temp (F)",t:"number",def:98.6,hint:"Normal 97-99"},
+      {k:"spo2",l:"SpO2 (%)",t:"number",def:98,hint:"Normal 95-100"},
+      {k:"diagnosis",l:"Diagnosis",t:"text",wide:1,sug:"self"},
+      {k:"treatment",l:"Treatment / medicine given",t:"textarea",wide:1},
+      {k:"dispo",l:"Outcome",t:"dyn",dyn:"outcome",req:1,def:"Treated - Back to Duty",wide:1},
+      {k:"remarks",l:"Remarks",t:"text",wide:1}],
+    cols:["date","time","_person","complaint","_vitals","treatment","dispo","_dut","uname"]},
+
+  medicine:{name:"Medicine Consumption Register",tab:"Med Consumption",multi:1,
+    hint:"Medicines issued or received in your shift. Add as many medicines as you need in one go.",
+    empty:"No stock movements yet. Log the first issue or receipt and running stock appears here.",
+    rowTitle:"Medicines",rowAdd:"+ Add another medicine",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},
+      {k:"type",l:"Entry type",t:"select",o:["Issued","Stock received"],def:"Issued"},
+      {k:"medicine",l:"Medicine name",t:"text",req:1,wide:1,sug:"medname"},
+      {k:"strength",l:"Strength / form",t:"text",ph:"500 mg tablet",sug:"self"},
+      {k:"reorder",l:"Reorder level",t:"number"},
+      {k:"opening",l:"Opening stock",t:"number",req:1},
+      {k:"qty",l:"Quantity",t:"number",req:1},
+      {k:"closing",l:"Closing stock",t:"number",ro:1,wide:1},
+      {k:"party",l:"Issued to / received from",t:"text",wide:1,sug:"self"},
+      {k:"batch",l:"Batch no.",t:"text"},{k:"expiry",l:"Expiry date",t:"date"}],
+    head:["date","type"],
+    row:["medicine","strength","opening","qty","closing","party","batch","expiry","reorder"],
+    cols:["date","type","medicine","strength","opening","qty","closing","party","batch","expiry","_dut","uname"]},
+
+  h1:{name:"H1 Schedule Drugs Register",tab:"H1 Drugs",
+    hint:"Schedule H1 drugs given to a patient, with batch, expiry and the doctor who permitted it.",
+    empty:"No H1 drug entries yet. Record each issue with the patient and doctor details.",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},{k:"time",l:"Time",t:"time",req:1,def:"now"},
+      PERSON,
+      {k:"medicine",l:"H1 drug name",t:"text",req:1,wide:1,sug:"medname"},
+      {k:"strength",l:"Strength / form",t:"text",sug:"self"},{k:"qty",l:"Quantity given",t:"number",req:1},
+      {k:"batch",l:"Batch no.",t:"text",req:1},{k:"expiry",l:"Expiry date",t:"date",req:1},
+      {k:"doctor",l:"Given with permission of",t:"dyn",dyn:"doctors",req:1,wide:1},
+      {k:"rx",l:"Prescription / reference no.",t:"text"},{k:"reason",l:"Reason / diagnosis",t:"text",sug:"self"},
+      {k:"remarks",l:"Remarks",t:"text",wide:1}],
+    cols:["date","time","_person","medicine","strength","batch","expiry","qty","doctor","_dut","uname"]},
+
+  waste:{name:"Bio Medical Waste Register",tab:"Bio-Med Waste",
+    hint:"Choose the site first. Waste by bag colour and liquid waste, with who gave the data.",
+    empty:"No waste entries yet. Pick the site and record each collection or handover.",
+    fields:[
+      {k:"site",l:"Site",t:"select",o:SITES,req:1,def:SITES[0],wide:1},
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},
+      {k:"source",l:"Data received from (name)",t:"text",req:1,sug:"self"},
+      {k:"category",l:"Waste type",t:"select",o:["Yellow","Red","White","Blue","Liquid"],req:1,def:"Yellow"},
+      {k:"desc",l:"What was discarded",t:"text",req:1,wide:1,sug:"self"},
+      {k:"qty",l:"Quantity",t:"number",req:1},
+      {k:"unit",l:"Unit",t:"select",o:["kg","L"],def:"kg"},
+      {k:"bags",l:"Number of bags / cans",t:"number"},
+      {k:"handedTo",l:"Handed over to (CBWTF)",t:"text",sug:"self"},
+      {k:"remarks",l:"Remarks",t:"text",wide:1}],
+    cols:["date","site","category","desc","qty","bags","handedTo","source","_dut","uname"]},
+
+  referral:{name:"Referral Register",tab:"Referral",
+    hint:"People sent to a hospital, the vehicle, driver and escort, and what happened afterwards.",
+    empty:"No referrals yet. Add one when someone is sent out, then update it after follow-up.",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},{k:"time",l:"Time",t:"time",def:"now"},
+      PERSON,
+      {k:"reason",l:"Reason / diagnosis",t:"text",req:1,wide:1,sug:"self"},
+      {k:"hospital",l:"Referred to (hospital)",t:"text",req:1,wide:1,sug:"self"},
+      {k:"doctor",l:"Doctor / department",t:"text"},
+      {k:"transport",l:"Transport",t:"select",o:["Ambulance","Company vehicle","Own vehicle","Other"]},
+      {k:"driver",l:"Ambulance driver name",t:"text",sug:"driver"},{k:"vehicle",l:"Vehicle no.",t:"text"},
+      {k:"escort",l:"Escort (who went along)",t:"dyn",dyn:"escort"},{k:"escortName",l:"Escort name",t:"text"},
+      {k:"condition",l:"Condition at referral",t:"select",o:["Stable","Serious","Critical"]},
+      {k:"status",l:"Status",t:"dyn",dyn:"refStatus",def:"Follow-up pending"},
+      {k:"followDate",l:"Follow-up date",t:"date"},
+      {k:"remarks",l:"Remarks",t:"text",wide:1}],
+    cols:["date","time","_person","reason","hospital","transport","driver","_escort","status","_dut","uname"]},
+
+  doctor:{name:"Doctor On Call Register",tab:"Doctor on Call",
+    hint:"Each time the on-call doctor is contacted, and the advice given. Doctors can be added, edited and removed.",
+    empty:"No doctor calls logged yet. Record the first call with the advice and medicines given.",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},{k:"time",l:"Time called",t:"time",req:1,def:"now"},
+      {k:"doctor",l:"Doctor",t:"dyn",dyn:"doctors",req:1},{k:"phone",l:"Doctor's phone",t:"text"},
+      PERSON,
+      {k:"complaint",l:"Complaint",t:"text",req:1,wide:1,sug:"self"},
+      {k:"mode",l:"How consulted",t:"select",o:["Phone","Video call","Visited centre"],def:"Phone"},
+      {k:"resp",l:"Doctor responded in (min)",t:"number"},
+      {k:"advice",l:"Doctor's advice",t:"textarea",wide:1},
+      {k:"meds",l:"Medicines advised",t:"textarea",wide:1},
+      {k:"outcome",l:"Outcome",t:"dyn",dyn:"outcome",wide:1}],
+    cols:["date","time","doctor","_person","complaint","mode","advice","outcome","_dut","uname"]},
+
+  requirement:{name:"Medicine Requirement Register",tab:"Med Requirement",multi:1,
+    hint:"Medicines and supplies to order. Add every item needed in one request, with the reason and shift.",
+    empty:"Nothing requested yet. Add what the centre needs, or raise it from a low-stock alert on the Overview.",
+    rowTitle:"Medicines required",rowAdd:"+ Add another medicine",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},
+      {k:"priority",l:"Priority",t:"select",o:["Routine","Urgent"],def:"Routine"},
+      {k:"reason",l:"Reason",t:"dyn",dyn:"reqReason",req:1,wide:1},
+      {k:"loc",l:"Location (camp / mines)",t:"text",wide:1,ph:"Type the camp or mines location"},
+      {k:"medicine",l:"Medicine / item",t:"text",req:1,wide:1,sug:"medname"},
+      {k:"strength",l:"Strength / form",t:"text",sug:"self"},{k:"qty",l:"Quantity required",t:"number",req:1},
+      {k:"stock",l:"Current stock",t:"number"},
+      {k:"status",l:"Status",t:"select",o:["Pending","Ordered","Received"],def:"Pending"},
+      {k:"recvDate",l:"Received on",t:"date"}],
+    head:["date","priority","reason","loc"],
+    row:["medicine","strength","qty","stock"],
+    cols:["date","_reason","medicine","strength","qty","stock","priority","status","_dut","uname"]},
+
+  steril:{name:"Sterilised Surgical Equipment Register",tab:"Sterilisation",defShift:"A",
+    hint:"Mandatory every day in A shift. Record each sterilisation cycle and its indicator result.",
+    empty:"No sterilisation recorded yet. Add today's A shift cycle.",
+    fields:[
+      {k:"date",l:"Date",t:"date",req:1,def:"today"},{k:"load",l:"Load / cycle no.",t:"text"},
+      {k:"items",l:"Instruments sterilised",t:"textarea",req:1,wide:1,chips:["Dressing set","Suture set","Artery forceps","Scissors","Kidney tray","Speculum","Tongue depressor","Instrument tray","Gauze and cotton packs"]},
+      {k:"method",l:"Method",t:"select",o:["Autoclave (steam)","Hot air oven","Chemical (Cidex / glutaraldehyde)","Boiling"],req:1,wide:1},
+      {k:"temp",l:"Temperature (C)",t:"number"},{k:"pressure",l:"Pressure (psi)",t:"number"},
+      {k:"mins",l:"Time (min)",t:"number"},
+      {k:"indicator",l:"Indicator result",t:"select",o:["Pass (indicator colour changed)","Fail"],req:1,def:"Pass (indicator colour changed)"},
+      {k:"remarks",l:"Remarks",t:"text",wide:1}],
+    cols:["date","load","items","method","_cycle","indicator","_dut","uname"]}
+};
+
+/* ===================== display helpers ===================== */
+function tone(v){
+  v=String(v||"");
+  if(/refer|admit|emergency|critical|urgent|fail|left without/i.test(v))return "bad";
+  if(/rest|observ|follow|doctor|pending|ordered|leave|serious/i.test(v))return "warn";
+  if(/back to duty|home|given|done|received|closed|pass|stable|treated|returned|visited/i.test(v))return "good";
+  return "";
+}
+const TONEK=new Set(["dispo","outcome","status","priority","indicator","condition","type"]);
+const fieldOf=(k,c)=>REGS[k].fields.find(f=>f.k===c);
+function personLabel(e){
+  const n=e.name||"";
+  switch(e.ptype){
+    case PTYPES[0]:return n+(e.empId?" (ID "+e.empId+")":"")+(e.dept?" - "+e.dept:"");
+    case PTYPES[1]:return n+" (Contract"+(e.dept?", "+e.dept:"")+")";
+    case PTYPES[2]:return n+" ("+(e.outsider||"Outsider")+")";
+    case PTYPES[3]:return n+" ("+(e.relation||"Dependent")+" of "+(e.relOf||"-")+")";
+    default:return n+(e.empId?" (ID "+e.empId+")":"")+(e.dept&&!e.empId?" - "+e.dept:"");
+  }
+}
+const has=v=>v!==""&&v!=null;
+function vitText(e){
+  return [has(e.bp)?"BP "+e.bp:"",has(e.pulse)?"P "+e.pulse:"",has(e.temp)?"T "+e.temp+"F":"",has(e.spo2)?"SpO2 "+e.spo2+"%":""].filter(Boolean).join(", ");
+}
+function vitBad(e){
+  const o={};
+  const m=String(e.bp||"").match(/(\d+)\s*\/\s*(\d+)/);
+  if(m&&(+m[1]>=140||+m[1]<90||+m[2]>=90||+m[2]<60))o.bp=1;
+  if(has(e.pulse)&&(e.pulse<60||e.pulse>100))o.pulse=1;
+  if(has(e.temp)&&(e.temp<97||e.temp>99.5))o.temp=1;
+  if(has(e.spo2)&&e.spo2<95)o.spo2=1;
+  return o;
+}
+function vitHTML(e){
+  const b=vitBad(e),x=(k,t)=>'<span class="'+(b[k]?"vbad":"")+'">'+esc(t)+'</span>';
+  const parts=[];
+  if(has(e.bp))parts.push(x("bp","BP "+e.bp));
+  if(has(e.pulse))parts.push(x("pulse","P "+e.pulse));
+  if(has(e.temp))parts.push(x("temp","T "+e.temp+"F"));
+  if(has(e.spo2))parts.push(x("spo2","SpO2 "+e.spo2+"%"));
+  return parts.length?'<span class="mono" style="font-size:12px">'+parts.join(", ")+"</span>":'<span class="nil">-</span>';
+}
+const VC={
+  _person:e=>personLabel(e),
+  _vitals:e=>vitText(e),
+  _dut:e=>[e.shift,e.duty].filter(Boolean).join(" / ")+(e.dloc?" ("+e.dloc+")":""),
+  _cycle:e=>[has(e.temp)?e.temp+" C":"",has(e.pressure)?e.pressure+" psi":"",has(e.mins)?e.mins+" min":""].filter(Boolean).join(", "),
+  _reason:e=>(e.reason||"")+(e.loc?" - "+e.loc:""),
+  _escort:e=>[e.escort,e.escortName].filter(Boolean).join(" - ")
+};
+const VL={_person:"Patient / Person",_vitals:"Vitals",_dut:"Shift / Duty",_cycle:"Cycle",_reason:"Reason",_escort:"Escort",uname:"Entered by",shift:"Shift"};
+function colLabel(k,c){if(VL[c])return VL[c];const f=fieldOf(k,c);return f?f.l:c}
+function cellText(k,c,e){
+  if(VC[c])return VC[c](e);
+  const f=fieldOf(k,c);let v=e[c];
+  if(v==null)return "";
+  if(f&&f.t==="date")return dmy(v);
+  if(k==="waste"&&c==="qty")return v+" "+(e.unit||"kg");
+  return String(v);
+}
+function cellHTML(k,c,e){
+  if(c==="_vitals")return vitHTML(e);
+  const v=cellText(k,c,e);
+  if(v==="")return '<span class="nil">-</span>';
+  if(k==="waste"&&c==="category")return '<span class="sw sw-'+esc(e.category)+'"></span>'+esc(v);
+  if(TONEK.has(c)){const t=tone(v);return '<span class="chip'+(t?" t-"+t:"")+'">'+esc(v)+"</span>"}
+  return esc(v);
+}
+function cardInfo(k,e){
+  const j=a=>a.filter(Boolean).join(" · ");
+  const when=fmtDate(e.date)+(e.time?" · "+e.time:"")+(e.shift?" · "+e.shift+" shift":"");
+  switch(k){
+    case "opd":return {title:esc(personLabel(e)),chip:e.dispo,sub:j([e.age?e.age+" y":"",e.sex]),body:esc(e.complaint)+(e.diagnosis?" - "+esc(e.diagnosis):"")+(e.treatment?"<br><span class='c-sub'>Rx: "+esc(e.treatment)+"</span>":"")+"<br>"+vitHTML(e),when};
+    case "medicine":return {title:esc(e.medicine)+(e.strength?" "+esc(e.strength):""),chip:e.type,sub:esc(e.party||""),body:'<span class="mono">'+(e.type==="Issued"?"-":"+")+e.qty+"</span> &nbsp;opening "+e.opening+" &rarr; closing <b class='mono'>"+e.closing+"</b>",when};
+    case "h1":return {title:esc(personLabel(e)),chip:null,sub:esc(e.doctor||""),body:esc(e.medicine)+(e.strength?" "+esc(e.strength):"")+" &times; <b class='mono'>"+esc(e.qty)+"</b><br><span class='c-sub'>Batch "+esc(e.batch||"-")+" · Exp "+esc(dmy(e.expiry)||"-")+"</span>",when};
+    case "waste":return {title:'<span class="sw sw-'+esc(e.category)+'"></span>'+esc(e.category)+" · "+esc(e.site||""),chip:null,sub:esc(e.source||""),body:esc(e.desc)+' · <b class="mono">'+esc(e.qty)+" "+esc(e.unit||"kg")+"</b>"+(e.bags?" · "+esc(e.bags)+" bags":""),when};
+    case "referral":return {title:esc(personLabel(e)),chip:e.status,sub:j([e.transport,e.driver?"Driver "+e.driver:"",VC._escort(e)?"Escort "+VC._escort(e):""]),body:esc(e.reason)+" &rarr; "+esc(e.hospital),when};
+    case "doctor":return {title:esc(personLabel(e)),chip:e.outcome,sub:esc(e.doctor||""),body:esc(e.complaint)+(e.advice?"<br><span class='c-sub'>"+esc(e.advice)+"</span>":""),when};
+    case "requirement":return {title:esc(e.medicine)+(e.strength?" "+esc(e.strength):""),chip:e.status,sub:j(["Qty "+e.qty,e.priority]),body:esc(VC._reason(e)),when};
+    default:return {title:esc(e.items||""),chip:e.indicator,sub:esc(e.method||""),body:esc(VC._cycle(e)),when};
+  }
+}
+
+/* ===================== suggestions + stock ===================== */
+const PERSON_REGS=["opd","referral","doctor","h1"];
+const uniqSorted=a=>Array.from(new Set(a.filter(Boolean).map(String))).sort((x,y)=>x.localeCompare(y)).slice(0,400);
+const nurseNames=()=>uniqSorted(S.staff.filter(s=>/nurs/i.test(s.position||"")||s.id===S.meId).map(s=>s.name));
+function sugId(f,k){return f.sug==="self"?"dl_"+k+"_"+f.k:"dl_"+f.sug}
+function sugVals(f,k){
+  switch(f.sug){
+    case "empId":return uniqSorted([].concat(...PERSON_REGS.map(r=>vis(r).map(e=>e.empId))));
+    case "dept":return uniqSorted([].concat(...PERSON_REGS.map(r=>vis(r).map(e=>e.dept))));
+    case "pname":return uniqSorted([].concat(...PERSON_REGS.map(r=>vis(r).map(e=>e.name))));
+    case "duty":return uniqSorted(nurseNames().concat(...ORDER.map(r=>vis(r).map(e=>e.duty))));
+    case "driver":return uniqSorted(S.staff.filter(s=>/driver/i.test(s.position||"")).map(s=>s.name).concat(vis("referral").map(e=>e.driver)));
+    case "medname":return uniqSorted([].concat(...["medicine","requirement","h1"].map(r=>S.reg[r].map(e=>e.medicine))));
+    default:return uniqSorted(vis(k).map(e=>e[f.k]));
+  }
+}
+function lastStock(name,strength){
+  const n=lc(name);if(!n)return null;
+  let c=S.reg.medicine.filter(e=>lc(e.medicine)===n);
+  if(strength){const s=c.filter(e=>lc(e.strength)===lc(strength));if(s.length)c=s}
+  let r=null;c.forEach(e=>{if(!r||(e.sr||0)>(r.sr||0))r=e});
+  return r;
+}
+function stocks(){
+  const m={};
+  S.reg.medicine.forEach(e=>{if(!e.medicine)return;const key=lc(e.medicine)+"|"+lc(e.strength);if(!m[key]||(e.sr||0)>(m[key].sr||0))m[key]=e});
+  return Object.keys(m).map(x=>{const e=m[x];return {name:e.medicine,strength:e.strength||"",closing:e.closing,reorder:e.reorder||0,low:(e.reorder||0)>0&&e.closing<=e.reorder}}).sort((a,b)=>a.name.localeCompare(b.name));
+}
+function guessShift(){const h=new Date().getHours();return h>=6&&h<14?"A":h>=14&&h<22?"B":"C"}
+
+/* ===================== form engine ===================== */
+let fidc=0,CTX=null,CURK="",lastFocus=null,delArmed=false;
+function fld(f,v,idp){
+  const id=(idp||"f_")+f.k+(++fidc);
+  const val=v==null?"":v;
+  const show=f.show?' data-show="'+f.show.join(",")+'"':"";
+  let c;
+  if(f.t==="select"){
+    const opts=f.o.map(o=>Array.isArray(o)?o:[o,o]);
+    const known=opts.some(o=>String(o[0])===String(val));
+    const blank=val===""?'<option value="">'+(f.req?"Select...":"-")+"</option>":"";
+    const extra=(val!==""&&!known)?"<option selected>"+esc(val)+"</option>":"";
+    c='<select id="'+id+'" data-k="'+f.k+'">'+blank+extra+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(o[0])===String(val)?" selected":"")+">"+esc(o[1])+"</option>").join("")+"</select>";
+  }else if(f.t==="dyn"){
+    const list=optList(f.dyn).slice();
+    const extra=(val!==""&&list.indexOf(val)<0)?[val]:[];
+    c='<select id="'+id+'" data-k="'+f.k+'" data-dyn="'+f.dyn+'">'+(val!==""?"":'<option value="">Select...</option>')+list.concat(extra).map(o=>"<option"+(o===val?" selected":"")+">"+esc(o)+"</option>").join("")+'<option value="__new__">+ Add new...</option></select><input data-k="'+f.k+'__new" class="newopt" placeholder="Type the new option" hidden>';
+  }else if(f.t==="textarea"){
+    c='<textarea id="'+id+'" data-k="'+f.k+'">'+esc(val)+"</textarea>"+(f.chips?'<div class="chips">'+f.chips.map(x=>'<button type="button" data-a="chip" data-v="'+esc(x)+'">'+esc(x)+"</button>").join("")+"</div>":"");
+  }else{
+    c='<input id="'+id+'" data-k="'+f.k+'" type="'+f.t+'" value="'+esc(val)+'"'+(f.t==="number"?' inputmode="decimal" step="any"':"")+(f.ph?' placeholder="'+esc(f.ph)+'"':"")+(f.ro?' readonly tabindex="-1"':"")+(f.sug?' list="'+sugId(f,CURK)+'" autocomplete="off"':"")+">";
+  }
+  return '<div class="fld'+(f.wide?" wide":"")+'" data-fld="'+f.k+'"'+show+'><label for="'+id+'">'+esc(f.l)+(f.req?' <span class="req">*</span>':"")+"</label>"+c+(f.hint?'<div class="fhint">'+esc(f.hint)+"</div>":"")+'<div class="ferr"></div></div>';
+}
+function dlHTML(k){
+  const R=REGS[k],seen={},out=[];
+  const fs=[].concat(R.fields.filter(f=>f.t!=="person"),PF,META);
+  fs.forEach(f=>{if(!f.sug)return;const id=sugId(f,k);if(seen[id])return;seen[id]=1;out.push('<datalist id="'+id+'">'+sugVals(f,k).map(x=>'<option value="'+esc(x)+'">').join("")+"</datalist>")});
+  return out.join("");
+}
+function personHTML(e,P,isNew){
+  const v=key=>isNew?(P[key]!=null?P[key]:(key==="ptype"?PTYPES[0]:"")):(e[key]!=null?e[key]:(key==="ptype"?PTYPES[0]:""));
+  return '<div class="pblock" data-person="1">'+PF.map(f=>fld(f,v(f.k))).join("")+"</div>";
+}
+function syncPerson(){
+  const sel=document.querySelector('#form [data-k="ptype"]');if(!sel)return;
+  const i=PTYPES.indexOf(sel.value);
+  document.querySelectorAll("#form [data-show]").forEach(w=>{w.hidden=w.dataset.show.split(",").indexOf(String(i))<0});
+  const lab=document.querySelector('#form [data-fld="dept"] label');
+  if(lab&&lab.firstChild)lab.firstChild.nodeValue=i===1?"Department / work area (type it)":"Department";
+}
+function syncReason(){
+  const sel=document.querySelector('#form [data-k="reason"]'),w=document.querySelector('#form [data-fld="loc"]');
+  if(!sel||!w)return;
+  w.hidden=!/camp|mines/i.test(sel.value==="__new__"?"":sel.value);
+}
+function syncWaste(){
+  const c=document.querySelector('#form [data-k="category"]'),u=document.querySelector('#form [data-k="unit"]');
+  if(c&&u)u.value=c.value==="Liquid"?"L":"kg";
+}
+function fillDoctorPhone(){
+  const s=document.querySelector('#form [data-k="doctor"]'),p=document.querySelector('#form [data-k="phone"]');
+  if(!s||!p)return;
+  const d=S.doctors.find(x=>x.name===s.value);
+  if(d&&d.phone)p.value=d.phone;
+}
+function autofillByEmp(id){
+  id=String(id||"").trim();if(!id)return;
+  let hit=null;
+  PERSON_REGS.forEach(r=>vis(r).forEach(e=>{if(String(e.empId||"").trim()===id&&(!hit||(e.createdAt||0)>=(hit.createdAt||0)))hit=e}));
+  if(!hit)return;
+  [["name"],["dept"],["age"],["sex"]].forEach(a=>{
+    const el=document.querySelector('#form [data-k="'+a[0]+'"]');
+    if(el&&!el.value&&hit[a[0]]!=null&&hit[a[0]]!=="")el.value=hit[a[0]];
+  });
+  toast("Details filled from the earlier entry for this ID");
+}
+function rowHTML(vals){
+  const R=REGS[CTX.k];CTX.rows++;const n=CTX.rows;
+  return '<div class="rowcard" data-row="'+n+'"><div class="rh"><span>Item <span class="rn"></span></span><button type="button" class="btn sm ghost" data-a="delrow">Remove</button></div><div class="grid">'+
+    R.fields.filter(f=>R.row.indexOf(f.k)>=0).map(f=>fld(f,vals&&vals[f.k]!=null?vals[f.k]:(f.def!=null?f.def:""),"r"+n+"_")).join("")+"</div></div>";
+}
+function renumRows(){
+  const rows=document.querySelectorAll("#rows .rowcard");
+  rows.forEach((r,i)=>{r.querySelector(".rn").textContent=i+1;r.querySelector('[data-a="delrow"]').hidden=rows.length<2});
+}
+function addRow(vals){
+  $("#rows").insertAdjacentHTML("beforeend",rowHTML(vals));
+  renumRows();recalc();
+  const last=document.querySelector("#rows .rowcard:last-child input");if(last&&vals===undefined)try{last.focus({preventScroll:false})}catch(e){}
+}
+function recalc(){
+  if(!CTX||CTX.kind!=="reg")return;
+  const k=CTX.k,rows=document.querySelectorAll("#rows .rowcard");
+  const typeEl=document.querySelector('#form [data-k="type"]'),type=typeEl?typeEl.value:"Issued";
+  if(k==="medicine"){
+    if(CTX.multi){
+      const run={};
+      rows.forEach(row=>{
+        const g=x=>row.querySelector('[data-k="'+x+'"]');
+        const name=g("medicine").value,op=g("opening"),se=g("strength");
+        if(!se.value&&lc(name)){const l0=lastStock(name,"");if(l0&&l0.strength)se.value=l0.strength}
+        const key=lc(name)+"|"+lc(se.value);
+        if(!op.dataset.manual&&lc(name)){
+          let base=Object.prototype.hasOwnProperty.call(run,key)?run[key]:((lastStock(name,g("strength").value)||{}).closing);
+          op.value=base==null?"":base;
+        }
+        const o=parseFloat(op.value)||0,q=parseFloat(g("qty").value)||0;
+        const cl=Math.round((type==="Issued"?o-q:o+q)*100)/100;
+        g("closing").value=(op.value===""&&g("qty").value==="")?"":cl;
+        if(lc(name))run[key]=cl;
+      });
+    }else{
+      const g=x=>document.querySelector('#form [data-k="'+x+'"]');
+      if(g("opening")&&g("qty")&&g("closing")){
+        const o=parseFloat(g("opening").value)||0,q=parseFloat(g("qty").value)||0;
+        g("closing").value=Math.round((type==="Issued"?o-q:o+q)*100)/100;
+      }
+    }
+  }else if(k==="requirement"&&CTX.multi){
+    rows.forEach(row=>{
+      const g=x=>row.querySelector('[data-k="'+x+'"]'),st=g("stock"),se=g("strength");
+      if(!se.value&&lc(g("medicine").value)){const l0=lastStock(g("medicine").value,"");if(l0&&l0.strength)se.value=l0.strength}
+      if(!st.dataset.manual&&lc(g("medicine").value)){const l=lastStock(g("medicine").value,g("strength").value);st.value=l?l.closing:""}
+    });
+  }
+}
+function openForm(k,entry,pre){
+  const R=REGS[k],isNew=!entry,e=entry||{},multi=!!R.multi&&isNew,P=pre||{};
+  CURK=k;CTX={kind:"reg",k:k,entry:entry||null,multi:multi,rows:0,cont:false};
+  lastFocus=document.activeElement;delArmed=false;
+  const d=S.duty;
+  const mv={shift:e.shift||P.shift||R.defShift||d.shift||guessShift(),duty:e.duty||P.duty||d.nurse||"",dloc:e.dloc||(isNew?(P.dloc||d.loc||""):"")};
+  const valFor=f=>{if(!isNew)return e[f.k];if(P[f.k]!=null)return P[f.k];if(f.def==="today")return todayStr();if(f.def==="now")return nowStr();return f.def};
+  const main=multi?R.fields.filter(f=>R.head.indexOf(f.k)>=0):R.fields;
+  let h='<div class="panel-h"><h2>'+(isNew?"New entry":"Entry "+srFmt(e.sr))+" &middot; "+esc(R.tab)+'</h2><button type="button" class="btn sm ghost" data-a="close">Close</button></div>';
+  h+='<div class="grid metarow">'+META.map(f=>fld(f,mv[f.k])).join("")+"</div>";
+  h+='<div class="grid" id="mainGrid">'+main.map(f=>f.t==="person"?personHTML(e,P,isNew):fld(f,valFor(f))).join("")+"</div>";
+  if(multi)h+='<h3 class="rowsh">'+esc(R.rowTitle)+'</h3><div id="rows"></div><button type="button" class="btn" data-a="addrow">'+esc(R.rowAdd)+"</button>";
+  h+=dlHTML(k);
+  h+='<div id="formerr" class="formerr" role="alert"></div><div class="foot"><button type="submit" class="btn primary" data-a="savemode" data-v="">Save entry</button>'+(multi?'<button type="submit" class="btn" data-a="savemode" data-v="cont">Save and add more</button>':"")+'<button type="button" class="btn" data-a="close">Cancel</button><span class="spacer"></span>'+(isNew?"":'<button type="button" class="btn" data-a="delentry">Delete</button>')+"</div>";
+  $("#form").innerHTML=h;
+  $("#sheet").hidden=false;document.body.style.overflow="hidden";
+  syncPerson();syncReason();
+  if(multi)addRow(P.rowVals?P.rowVals:undefined);
+  else recalc();
+  const f1=$("#form").querySelector("#mainGrid input:not([readonly]):not([type=date]):not([type=time]),#mainGrid select,#mainGrid textarea");
+  if(f1)setTimeout(()=>{try{f1.focus({preventScroll:true})}catch(x){}},30);
+  $("#form").scrollTop=0;
+}
+function closeForm(){
+  $("#sheet").hidden=true;document.body.style.overflow="";CTX=null;
+  if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}
+}
+function readField(root,f){
+  const el=root.querySelector('[data-k="'+f.k+'"]');
+  if(!el)return {v:""};
+  let v=el.value,newOpt=null;
+  if(f.t==="dyn"&&v==="__new__"){const n=root.querySelector('[data-k="'+f.k+'__new"]');v=n?n.value.trim():"";if(v)newOpt={key:f.dyn,val:v}}
+  v=String(v).trim();
+  if(f.t==="number"&&v!==""){const n=Number(v);if(isNaN(n))return {v:"",err:"Enter a number"};v=n}
+  return {v:v,newOpt:newOpt};
+}
+function setErr(wrap,msg){if(!wrap)return;wrap.classList.add("bad");const er=wrap.querySelector(".ferr");if(er)er.textContent=msg}
+function collect(root,fields,errs,newOpts){
+  const out={};
+  fields.forEach(f=>{
+    const wrap=root.querySelector('[data-fld="'+f.k+'"]');
+    if(wrap){wrap.classList.remove("bad");const er=wrap.querySelector(".ferr");if(er)er.textContent=""}
+    if(wrap&&wrap.hidden){out[f.k]="";return}
+    const r=readField(root,f);
+    let msg=r.err||"";
+    if(!msg&&f.req&&(r.v===""||r.v==null))msg=f.t==="dyn"?"Choose an option or add a new one":"Required";
+    if(msg){errs.n++;setErr(wrap,msg)}
+    out[f.k]=r.v;
+    if(r.newOpt)newOpts.push(r.newOpt);
+  });
+  return out;
+}
+function formFail(msg){
+  $("#formerr").textContent=msg||"Please fix the marked fields.";
+  const b=$("#form").querySelector(".fld.bad");
+  if(b&&b.scrollIntoView)b.scrollIntoView({block:"center"});
+}
+async function submitReg(){
+  const {k,entry,multi}=CTX,R=REGS[k],errs={n:0},newOpts=[];
+  const form=$("#form");
+  $("#formerr").textContent="";
+  recalc();
+  const meta=collect(form.querySelector(".metarow"),META,errs,newOpts);
+  const me=curUser()||{};
+  let recs=[],headForCont={};
+  if(!multi){
+    const fields=[].concat(...R.fields.map(f=>f.t==="person"?PF:[f]));
+    const vals=collect($("#mainGrid"),fields,errs,newOpts);
+    if(k==="medicine"&&!errs.n&&vals.type==="Issued"&&vals.closing!==""&&vals.closing<0){errs.n++;setErr($("#mainGrid").querySelector('[data-fld="qty"]'),"More than the opening stock")}
+    if(errs.n){formFail();return}
+    recs=[entry?Object.assign({},entry,vals,meta,{updatedAt:Date.now()}):Object.assign({},vals,meta,{id:newId("e"),sr:nextSr(k),uid:S.meId,uname:me.name||"",createdAt:Date.now()})];
+  }else{
+    const hf=R.fields.filter(f=>R.head.indexOf(f.k)>=0),rf=R.fields.filter(f=>R.row.indexOf(f.k)>=0);
+    const head=collect($("#mainGrid"),hf,errs,newOpts);
+    const rows=Array.from(document.querySelectorAll("#rows .rowcard")),vals=[];
+    rows.forEach(r=>{
+      const empty=!r.querySelector('[data-k="medicine"]').value.trim()&&!r.querySelector('[data-k="qty"]').value.trim();
+      if(empty&&rows.length>1)return;
+      const v=collect(r,rf,errs,newOpts);
+      if(k==="medicine"&&head.type==="Issued"&&v.closing!==""&&v.closing<0){errs.n++;setErr(r.querySelector('[data-fld="qty"]'),"More than the opening stock")}
+      vals.push(v);
+    });
+    if(!vals.length){formFail("Add at least one medicine.");return}
+    if(errs.n){formFail();return}
+    let sr=nextSr(k);const slip=newId("s"),ts=Date.now();
+    vals.forEach(v=>{
+      const o=Object.assign({},head,v,meta,{id:newId("e"),sr:sr++,slip:slip,uid:S.meId,uname:me.name||"",createdAt:ts});
+      if(k==="requirement"){o.status="Pending";o.recvDate=""}
+      recs.push(o);
+    });
+    headForCont=Object.assign({},head,{shift:meta.shift,duty:meta.duty,dloc:meta.dloc});
+  }
+  if(!putRecords(k,recs)){formFail("Could not save. Device storage may be full. Download a backup first.");return}
+  newOpts.forEach(o=>addOpt(o.key,o.val));
+  const cont=CTX.cont;
+  closeForm();
+  toast(entry?"Entry updated":recs.length>1?recs.length+" entries saved":"Entry saved");
+  refresh();
+  if(cont&&multi)openForm(k,null,headForCont);
+}
+async function deleteEntry(){
+  if(!CTX||!CTX.entry)return;
+  const k=CTX.k,e=CTX.entry,R=REGS[k];
+  const ok=await askCode("Delete entry "+srFmt(e.sr)+" from the "+R.name+"?");
+  if(!ok)return;
+  const label=R.name+" #"+srFmt(e.sr)+" - "+(e.name?personLabel(e):(e.medicine||e.items||e.desc||""));
+  if(!logDelete(R.name,e,label))return;
+  S.reg[k]=S.reg[k].filter(x=>x.id!==e.id);persist(k);
+  closeForm();toast("Entry deleted. The deletion is recorded in history.");refresh();
+}
+
+/* ===================== staff, doctors, notes ===================== */
+function initials(n){return String(n||"?").replace(/^(dr\.?|mr\.?|mrs\.?|ms\.?)\s+/i,"").split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("")||"?"}
+function avaHTML(s,size){
+  const st=size?' style="width:'+size+"px;height:"+size+"px;font-size:"+Math.round(size*.4)+'px"':"";
+  return s&&s.photo?'<img class="ava" src="'+esc(s.photo)+'" alt=""'+st+">":'<div class="ava"'+st+">"+esc(initials(s&&s.name))+"</div>";
+}
+function resizeImage(file,max){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>rej(new Error("read"));
+    fr.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>rej(new Error("img"));
+      img.onload=()=>{
+        const s=Math.min(img.width,img.height),sx=(img.width-s)/2,sy=(img.height-s)/2,c=document.createElement("canvas");
+        c.width=c.height=max;c.getContext("2d").drawImage(img,sx,sy,s,s,0,0,max,max);
+        res(c.toDataURL("image/jpeg",0.78));
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+const STAFF_FIELDS=[
+  {k:"name",l:"Full name",t:"text",req:1,wide:1},
+  {k:"position",l:"Position",t:"dyn",dyn:"positions",req:1},
+  {k:"designation",l:"Designation",t:"text"},
+  {k:"education",l:"Education / qualification",t:"text",wide:1},
+  {k:"phone",l:"Phone",t:"text"},
+  {k:"site",l:"Posting",t:"select",o:SITES},
+  {k:"role",l:"Access level",t:"select",o:[["staff","Staff - sees only own entries"],["admin","Admin - sees everything"]],req:1,def:"staff",wide:1}
+];
+function openStaff(id){
+  const s=id?S.staff.find(x=>x.id===id):null;if(id&&!s)return;
+  CURK="opd";CTX={kind:"staff",staff:s||null,photo:s?s.photo||"":"",giveCode:!s};
+  lastFocus=document.activeElement;
+  const e=s||{role:"staff"};
+  let h='<div class="panel-h"><h2>'+(s?"Edit staff profile":"Add staff")+'</h2><button type="button" class="btn sm ghost" data-a="close">Close</button></div>';
+  h+='<div class="photoline" style="margin-bottom:12px"><div id="photoPrev">'+avaHTML({name:e.name||"?",photo:CTX.photo},72)+'</div><div style="display:grid;gap:6px"><label class="btn sm filebtn">Choose photo<input id="photoIn" type="file" accept="image/*" hidden></label><button type="button" class="btn sm ghost" data-a="rmphoto">Remove photo</button></div></div>';
+  h+='<div class="grid" id="mainGrid">'+STAFF_FIELDS.map(f=>fld(f,e[f.k])).join("")+"</div>";
+  if(s){
+    h+='<div class="panel-box" style="margin-top:12px"><b>Login code</b><p class="hint" style="margin:4px 0 8px">'+(s.codeHash?"This person has a unique code.":"No login code yet.")+' A new code is shown only once. '+(CLOUD?'It works on any phone or computer straight away; the old code stops working.':'Share the updated staff setup file from the Data page with every device.')+'</p><button type="button" class="btn sm" data-a="resetcode">'+(s.codeHash?"Reset code":"Create code")+"</button></div>";
+  }else{
+    h+='<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="giveCode" checked style="width:auto;min-height:0"> Create a unique login code for this person</label>';
+  }
+  h+='<div id="formerr" class="formerr" role="alert"></div><div class="foot"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-a="close">Cancel</button><span class="spacer"></span>'+(s?'<button type="button" class="btn" data-a="delstaff">Delete</button>':"")+"</div>";
+  $("#form").innerHTML=h;$("#sheet").hidden=false;document.body.style.overflow="hidden";$("#form").scrollTop=0;
+}
+async function saveStaff(){
+  const errs={n:0},no=[];
+  const vals=collect($("#mainGrid"),STAFF_FIELDS,errs,no);
+  const old=CTX.staff;
+  if(errs.n){formFail();return}
+  if(old&&old.role==="admin"&&vals.role!=="admin"&&S.staff.filter(x=>x.role==="admin"&&x.id!==old.id).length===0){setErr($("#mainGrid").querySelector('[data-fld="role"]'),"There must be at least one admin");formFail();return}
+  const obj=old?Object.assign({},old,vals,{photo:CTX.photo,updatedAt:Date.now()}):Object.assign({},vals,{id:newId("s"),photo:CTX.photo,codeHash:"",active:true,updatedAt:Date.now()});
+  let code="";
+  if(!old&&$("#giveCode")&&$("#giveCode").checked){
+    try{
+      code=makeCode();let h=await hashCode(code);
+      while(await codeTaken(h,obj.id)){code=makeCode();h=await hashCode(code)}
+      obj.codeHash=h;
+    }catch(e){formFail("This browser cannot create secure codes. Open the site through its https link.");return}
+  }
+  const before=S.staff.slice(),i=S.staff.findIndex(x=>x.id===obj.id);
+  if(i<0)S.staff.push(obj);else S.staff[i]=obj;
+  if(!sv("ohc_staff",S.staff)){S.staff=before;formFail("Could not save. Device storage may be full. Try a smaller photo or download a backup.");return}
+  no.forEach(o=>addOpt(o.key,o.val));
+  closeForm();toast(old?"Profile updated":"Staff added");route();
+  if(code)await modal({title:"Login code for "+obj.name,body:'<p class="hint">Note this code and give it to the person. It is shown only once.</p><div class="bigcode">'+esc(code)+"</div>",ok:"Done",cancel:false});
+}
+async function resetCode(){
+  const s=CTX&&CTX.staff;if(!s)return;
+  let code,h;
+  try{code=makeCode();h=await hashCode(code);while(await codeTaken(h,s.id)){code=makeCode();h=await hashCode(code)}}
+  catch(e){toast("This browser cannot create secure codes");return}
+  const i=S.staff.findIndex(x=>x.id===s.id);
+  S.staff[i]=Object.assign({},s,{codeHash:h,updatedAt:Date.now()});CTX.staff=S.staff[i];
+  sv("ohc_staff",S.staff);
+  await modal({title:"New code for "+s.name,body:'<p class="hint">Note this code and give it to the person. It is shown only once.</p><div class="bigcode">'+esc(code)+"</div>",ok:"Done",cancel:false});
+  route();
+}
+async function deleteStaff(){
+  const s=CTX&&CTX.staff;if(!s)return;
+  if(s.id===S.meId){toast("You cannot delete your own profile");return}
+  if(s.role==="admin"&&S.staff.filter(x=>x.role==="admin"&&x.id!==s.id).length===0){toast("There must be at least one admin");return}
+  const ok=await askCode("Delete the profile of "+s.name+"?");if(!ok)return;
+  const snap=Object.assign({},s,{photo:s.photo?"(photo not kept)":""});
+  if(!logDelete("Staff profile",snap,s.name+" - "+(s.position||"")))return;
+  S.staff=S.staff.filter(x=>x.id!==s.id);sv("ohc_staff",S.staff);
+  closeForm();toast("Profile deleted. The deletion is recorded in history.");route();
+}
+function openDoctors(){
+  CURK="opd";CTX={kind:"doctors"};lastFocus=document.activeElement;
+  const row=d=>'<div class="dlrow" data-did="'+(d?esc(d.id):"")+'"><input data-k="dname" placeholder="Doctor name" value="'+esc(d?d.name:"")+'" aria-label="Doctor name"><input data-k="dphone" placeholder="Phone" inputmode="tel" value="'+esc(d?d.phone||"":"")+'" aria-label="Phone" style="max-width:150px"><button type="button" class="btn sm" data-a="deldoc">Delete</button></div>';
+  CTX.rowFn=row;
+  $("#form").innerHTML='<div class="panel-h"><h2>On-call doctors</h2><button type="button" class="btn sm ghost" data-a="close">Close</button></div><p class="hint" style="margin-bottom:10px">Add a doctor when someone new joins. Names and phone numbers can be edited. Deleting asks for your code.</p><div id="docrows">'+S.doctors.map(row).join("")+'</div><button type="button" class="btn sm" data-a="adddoc">+ Add doctor</button><div id="formerr" class="formerr" role="alert"></div><div class="foot"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-a="close">Close</button></div>';
+  $("#sheet").hidden=false;document.body.style.overflow="hidden";
+}
+function saveDoctors(){
+  const rows=Array.from(document.querySelectorAll("#docrows .dlrow")),next=[],seen={};
+  for(const r of rows){
+    const name=r.querySelector('[data-k="dname"]').value.trim(),phone=r.querySelector('[data-k="dphone"]').value.trim(),id=r.dataset.did;
+    if(!name)continue;
+    if(seen[lc(name)]){$("#formerr").textContent=name+" is listed twice.";return}
+    seen[lc(name)]=1;
+    const old=id?S.doctors.find(d=>d.id===id):null;
+    next.push(old?Object.assign({},old,{name:name,phone:phone,updatedAt:old.name!==name||old.phone!==phone?Date.now():old.updatedAt}):{id:newId("d"),name:name,phone:phone,updatedAt:Date.now()});
+  }
+  S.doctors=next;sv("ohc_doctors",S.doctors);
+  closeForm();toast("Doctors saved");refresh();
+}
+async function deleteDoctorRow(btn){
+  const row=btn.closest(".dlrow"),id=row.dataset.did;
+  if(!id){row.remove();return}
+  const d=S.doctors.find(x=>x.id===id);if(!d){row.remove();return}
+  const ok=await askCode("Remove "+d.name+" from the on-call doctors?");if(!ok)return;
+  if(!logDelete("On-call doctor",d,d.name))return;
+  S.doctors=S.doctors.filter(x=>x.id!==id);sv("ohc_doctors",S.doctors);row.remove();toast("Doctor removed. Recorded in history.");refresh();
+}
+function openNote(){
+  CURK="opd";CTX={kind:"note"};lastFocus=document.activeElement;
+  $("#form").innerHTML='<div class="panel-h"><h2>Daily activity note</h2><button type="button" class="btn sm ghost" data-a="close">Close</button></div><p class="hint" style="margin-bottom:10px">Use this for anything done outside the registers, for example an item taken from the OHC. The note stays highlighted on every page until it is removed.</p><div class="fld"><label for="noteText">Note <span class="req">*</span></label><textarea id="noteText" data-k="text" placeholder="What happened?"></textarea><div class="ferr"></div></div><div id="formerr" class="formerr" role="alert"></div><div class="foot"><button type="submit" class="btn primary">Show this note</button><button type="button" class="btn" data-a="close">Cancel</button></div>';
+  $("#sheet").hidden=false;document.body.style.overflow="hidden";
+  setTimeout(()=>{const t=$("#noteText");if(t)t.focus()},30);
+}
+function saveNote(){
+  const t=$("#noteText").value.trim();
+  if(!t){$("#formerr").textContent="Write the note first.";return}
+  const me=curUser()||{};
+  S.notes.push({id:newId("n"),text:t,date:todayStr(),time:nowStr(),shift:S.duty.shift||guessShift(),uid:S.meId,uname:me.name||"",ts:Date.now()});
+  if(!sv("ohc_notes",S.notes)){S.notes.pop();$("#formerr").textContent="Could not save.";return}
+  closeForm();renderAlerts();toast("Note added");
+}
+async function removeNote(id){
+  const n=S.notes.find(x=>x.id===id);if(!n)return;
+  const ok=await askCode("Remove this note: "+n.text.slice(0,80));if(!ok)return;
+  if(!logDelete("Activity note",n,n.text.slice(0,120)))return;
+  S.notes=S.notes.filter(x=>x.id!==id);sv("ohc_notes",S.notes);renderAlerts();toast("Note removed. Recorded in history.");
+}
+async function submitForm(ev){
+  ev.preventDefault();if(!CTX)return;
+  if(CTX.kind==="reg")return submitReg();
+  if(CTX.kind==="staff")return saveStaff();
+  if(CTX.kind==="doctors")return saveDoctors();
+  if(CTX.kind==="note")return saveNote();
+}
+
+/* ===================== sign in ===================== */
+let LS_KEEP="ohc_keep";
+function showGate(){
+  $("#app").hidden=true;
+  const g=$("#gate");g.hidden=false;
+  if(CLOUD){showGateCloud();return}
+  const hasUsers=S.staff.some(s=>s.codeHash);
+  const imp='<label class="linkbtn filebtn">Have a setup or backup file? Import it<input type="file" id="gFile" accept=".json,application/json" hidden></label>';
+  if(!hasUsers){
+    g.innerHTML='<form class="gate-card" id="gForm" novalidate><div><span class="logo" style="background:var(--grad);color:#fff">OHC</span></div><h1>North Cluster OHC</h1><p class="sub">First time on this device. Create your admin code. Other staff get their own codes from the Team page, and open the site only after importing your staff setup file.</p>'+
+      '<div class="fld"><label for="gName">Your name</label><input id="gName" value="Shri Vardhan Joshi" autocomplete="off"></div>'+
+      '<div class="fld"><label for="gDes">Designation</label><input id="gDes" value="Sr. Nursing Officer" autocomplete="off"></div>'+
+      '<div class="fld"><label for="gCode">Create your unique code (6 or more letters or numbers)</label><input id="gCode" class="code" type="password" autocomplete="new-password" autocapitalize="characters" spellcheck="false"></div>'+
+      '<div class="fld"><label for="gCode2">Type the code again</label><input id="gCode2" class="code" type="password" autocomplete="new-password" autocapitalize="characters" spellcheck="false"></div>'+
+      '<div class="mmsg" id="gMsg" role="alert"></div><button type="submit" class="btn primary">Create and open</button>'+imp+"</form>";
+    $("#gForm").addEventListener("submit",async ev=>{
+      ev.preventDefault();
+      const name=$("#gName").value.trim(),des=$("#gDes").value.trim(),c1=$("#gCode").value.trim(),c2=$("#gCode2").value.trim(),m=$("#gMsg");
+      if(!name){m.textContent="Enter your name.";return}
+      if(c1.length<6){m.textContent="The code needs at least 6 letters or numbers.";return}
+      if(c1!==c2){m.textContent="The two codes do not match.";return}
+      let h;try{h=await hashCode(c1)}catch(e){m.textContent="This browser cannot create secure codes. Open the site through its https link.";return}
+      const u={id:newId("s"),name:name,position:"Sr. Nursing Officer",designation:des,education:"",phone:"",site:"",role:"admin",photo:"",codeHash:h,active:true,updatedAt:Date.now()};
+      S.staff.push(u);sv("ohc_staff",S.staff);
+      enter(u.id,false);
+    });
+  }else{
+    g.innerHTML='<form class="gate-card" id="gForm" novalidate><div><span class="logo" style="background:var(--grad);color:#fff">OHC</span></div><h1>North Cluster OHC</h1><p class="sub">Enter your unique code to open the registers.</p>'+
+      '<div class="fld"><label for="gCode">Your code</label><input id="gCode" class="code" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false"></div>'+
+      '<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" id="gKeep" style="width:auto;min-height:0"> Keep me signed in on this device</label>'+
+      '<div class="mmsg" id="gMsg" role="alert"></div><button type="submit" class="btn primary">Open</button>'+imp+"</form>";
+    $("#gForm").addEventListener("submit",async ev=>{
+      ev.preventDefault();
+      const m=$("#gMsg"),code=$("#gCode").value.trim();
+      const until=Number(sessionStorage.getItem("ohc_lock")||0);
+      if(Date.now()<until){m.textContent="Too many wrong tries. Wait "+Math.ceil((until-Date.now())/1000)+" seconds.";return}
+      if(!code){m.textContent="Enter your code.";return}
+      let h;try{h=await hashCode(code)}catch(e){m.textContent="This browser cannot check codes. Open the site through its https link.";return}
+      const u=S.staff.find(s=>s.codeHash&&s.codeHash===h&&s.active!==false);
+      if(!u){
+        const n=Number(sessionStorage.getItem("ohc_fails")||0)+1;sessionStorage.setItem("ohc_fails",String(n));
+        if(n>=5){sessionStorage.setItem("ohc_lock",String(Date.now()+30000));sessionStorage.setItem("ohc_fails","0");m.textContent="Too many wrong tries. Wait 30 seconds."}
+        else m.textContent="This code is not correct.";
+        return;
+      }
+      sessionStorage.setItem("ohc_fails","0");
+      enter(u.id,$("#gKeep").checked);
+    });
+  }
+  const gf=$("#gFile");
+  if(gf)gf.addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(f)importFile(f,()=>showGate());e.target.value=""});
+  setTimeout(()=>{const i=$("#gCode")||$("#gName");if(i)try{i.focus()}catch(e){}},50);
+}
+function enter(id,keep){
+  S.meId=id;
+  try{sessionStorage.setItem("ohc_sid",id);if(keep)localStorage.setItem(LS_KEEP,id);else localStorage.removeItem(LS_KEEP)}catch(e){}
+  $("#gate").hidden=true;$("#app").hidden=false;
+  const me=curUser();
+  $("#whoName").textContent=me?me.name:"";
+  if(!S.duty.shift)S.duty.shift=guessShift();
+  if(me&&(/nurs/i.test(me.position||"")||!S.duty.nurse))S.duty.nurse=me.name;
+  if(!S.duty.loc&&me&&SITES.indexOf(me.site)>=0)S.duty.loc=me.site;
+  sv("ohc_duty",S.duty);
+  buildDuty();route();
+}
+function lock(){
+  if(CLOUD){cloudLock();return}
+  try{sessionStorage.removeItem("ohc_sid");localStorage.removeItem(LS_KEEP)}catch(e){}
+  S.meId=null;closeForm();$("#modal").hidden=true;showGate();
+}
+
+/* ===================== duty strip + alerts ===================== */
+function buildDuty(){
+  $("#dShift").innerHTML=SHIFTS.map(s=>'<option value="'+s[0]+'"'+(s[0]===S.duty.shift?" selected":"")+">"+esc(s[1])+"</option>").join("");
+  $("#dLoc").innerHTML='<option value="">Select location</option>'+SITES.map(s=>'<option'+(s===S.duty.loc?" selected":"")+">"+esc(s)+"</option>").join("");
+  $("#dNurse").value=S.duty.nurse||"";
+  $("#dl_dutynurse").innerHTML=nurseNames().map(n=>'<option value="'+esc(n)+'">').join("");
+  $("#shiftNow").textContent="New entries use this shift, location and nurse.";
+}
+function renderAlerts(){
+  let h="";
+  S.notes.slice().sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(n=>{
+    h+='<div class="note" role="status"><div class="nb"><b>Activity note:</b> '+esc(n.text)+"<small>"+esc(fmtDate(n.date))+" "+esc(n.time||"")+(n.shift?" &middot; "+esc(n.shift)+" shift":"")+(n.uname?" &middot; "+esc(n.uname):"")+'</small></div><button type="button" class="btn sm" data-a="delnote" data-v="'+esc(n.id)+'">Remove</button></div>';
+  });
+  if(new Date().getHours()>=6&&!S.reg.steril.some(e=>e.date===todayStr()&&e.shift==="A")){
+    h+='<div class="alert"><span>Sterilisation of surgical equipment is not recorded for today (A shift, mandatory daily).</span><button type="button" class="btn sm" data-a="newsteril">Add now</button></div>';
+  }
+  h+='<div class="notebar"><button type="button" class="btn sm" data-a="addnote">+ Daily activity note</button></div>';
+  $("#alerts").innerHTML=h;
+}
+
+/* ===================== routing ===================== */
+const ROUTES=["home","overview"].concat(ORDER,["data"]);
+const TABN={home:"Team",overview:"Overview",data:"Data"};
+const cur=()=>{const h=(location.hash||"").slice(1);return ROUTES.indexOf(h)>=0?h:"home"};
+const UIS={};
+const ui=k=>UIS[k]||(UIS[k]={q:"",month:"",shift:"",site:"",limit:100});
+function buildTabs(){
+  const r=cur();
+  $("#tabs").innerHTML=ROUTES.map(x=>'<a href="#'+x+'"'+(x===r?' aria-current="page"':"")+">"+esc(TABN[x]||REGS[x].tab)+"</a>").join("");
+  const a=$("#tabs [aria-current]");if(a&&a.scrollIntoView)try{a.scrollIntoView({inline:"center",block:"nearest"})}catch(e){}
+}
+function route(){
+  if(!S.meId)return;
+  buildTabs();renderAlerts();
+  const r=cur();
+  if(r==="home")renderHome();else if(r==="overview")renderOverview();else if(r==="data")renderData();else renderRegister(r);
+  window.scrollTo(0,0);
+}
+function refresh(){
+  if(!S.meId)return;
+  renderAlerts();
+  const r=cur();
+  if(r==="home")renderHome();else if(r==="overview")renderOverview();else if(r==="data")renderData();else{renderExtras(r);renderList(r)}
+}
+
+/* ===================== home (team) ===================== */
+function renderHome(){
+  const admin=isAdmin();
+  const positions=S.lists.positions.slice();
+  S.staff.forEach(s=>{if(s.position&&positions.indexOf(s.position)<0)positions.push(s.position)});
+  const sh=SHIFTS.find(x=>x[0]===S.duty.shift);
+  let h='<div class="reg-head"><div><div class="eyebrow">North Cluster OHC &middot; Darlaghat</div><h1>Our Team</h1><p>Everyone who runs the occupational health centre, grouped by position.</p></div>'+
+    (admin?'<div class="btnrow"><button type="button" class="btn primary" data-a="addstaff">+ Add staff</button><button type="button" class="btn sm" data-a="staffxl">Excel</button><button type="button" class="btn sm" data-a="staffpdf">PDF</button></div>':"")+"</div>";
+  h+='<div class="sitechips">'+SITES.map(s=>'<span class="sitechip">'+esc(s)+"</span>").join("")+"</div>";
+  h+='<div class="ondutybox"><div><div class="eyebrow">On duty now</div><b>'+esc(sh?sh[1]:"Not set")+'</b></div><div><div class="eyebrow">Duty location</div><b>'+esc(S.duty.loc||"Not set")+'</b></div><div><div class="eyebrow">Staff nurse</div><b>'+esc(S.duty.nurse||"Not set")+"</b></div></div>";
+  let any=false;
+  positions.forEach(p=>{
+    const mem=S.staff.filter(s=>s.position===p&&s.active!==false);
+    if(!mem.length)return;any=true;
+    h+='<section class="possec"><div class="poshead"><h2>'+esc(p)+'</h2><span class="count-chip">'+mem.length+'</span></div><div class="tgrid">'+mem.map(s=>
+      '<div class="tcard">'+avaHTML(s)+'<div class="tinfo"><b>'+esc(s.name)+'</b><span class="d">'+esc(s.designation||s.position||"")+"</span>"+
+      (s.education?'<span class="m">'+esc(s.education)+"</span>":"")+(s.phone?'<span class="m">'+esc(s.phone)+"</span>":"")+(s.site?'<span class="m">'+esc(s.site)+"</span>":"")+
+      (admin?'<div class="row"><button type="button" class="btn sm" data-a="editstaff" data-v="'+esc(s.id)+'">Edit</button>'+(s.codeHash?'<span class="chip t-good">Has login</span>':'<span class="chip">No login</span>')+(s.role==="admin"?'<span class="chip">Admin</span>':"")+"</div>":"")+
+      "</div></div>").join("")+"</div></section>";
+  });
+  if(!any)h+='<div class="empty"><p>No staff profiles yet.</p>'+(admin?'<button type="button" class="btn primary" data-a="addstaff">+ Add staff</button>':"")+"</div>";
+  h+='<section class="possec"><div class="poshead"><h2>On-call doctors</h2><span class="count-chip">'+S.doctors.length+'</span><button type="button" class="btn sm" data-a="docs">Manage doctors</button></div><div class="tgrid">'+
+    (S.doctors.length?S.doctors.map(d=>'<div class="tcard">'+avaHTML({name:d.name},56)+'<div class="tinfo"><b>'+esc(d.name)+'</b><span class="m">'+esc(d.phone||"No phone saved")+"</span></div></div>").join(""):'<p class="hint">No doctors yet. Use Manage doctors to add one.</p>')+"</div></section>";
+  $("#view").innerHTML=h;
+}
+
+/* ===================== overview ===================== */
+function renderOverview(){
+  const t=todayStr(),ym=t.slice(0,7),d=new Date(),v=vis;
+  const opdT=v("opd").filter(e=>e.date===t).length,opdM=v("opd").filter(e=>(e.date||"").slice(0,7)===ym).length;
+  const refOpen=v("referral").filter(e=>/pending|admitted/i.test(e.status||"")).length;
+  const reqOpen=v("requirement").filter(e=>e.status!=="Received").length;
+  const h1M=v("h1").filter(e=>(e.date||"").slice(0,7)===ym).length;
+  const low=stocks().filter(s=>s.low);
+  const cm={};v("opd").forEach(e=>{if((e.date||"").slice(0,7)===ym&&e.complaint){const c=e.complaint.trim().toLowerCase();cm[c]=(cm[c]||0)+1}});
+  const top=Object.keys(cm).map(c=>[c,cm[c]]).sort((a,b)=>b[1]-a[1]).slice(0,5),maxc=top.length?top[0][1]:1;
+  const bw={Yellow:0,Red:0,White:0,Blue:0,Liquid:0};
+  v("waste").forEach(e=>{if((e.date||"").slice(0,7)===ym&&bw[e.category]!=null)bw[e.category]+=Number(e.qty)||0});
+  const byShift={G:0,A:0,B:0,C:0};
+  ORDER.forEach(k=>v(k).forEach(e=>{if(e.date===t&&byShift[e.shift]!=null)byShift[e.shift]++}));
+  const mon=d.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const stDone=S.reg.steril.some(e=>e.date===t&&e.shift==="A");
+  $("#view").innerHTML=
+    '<div class="eyebrow">'+d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div><h1>Overview</h1>'+
+    '<div class="stats">'+
+    '<div class="stat"><span>OPD visits today</span><b>'+opdT+"</b><span>"+opdM+" this month</span></div>"+
+    '<div class="stat'+(refOpen?" flag":"")+'"><span>Referrals open</span><b>'+refOpen+"</b><span>follow-up or admitted</span></div>"+
+    '<div class="stat'+(low.length?" flag":"")+'"><span>Low stock</span><b>'+low.length+"</b><span>at or below reorder level</span></div>"+
+    '<div class="stat"><span>Medicines to order</span><b>'+reqOpen+"</b><span>pending or ordered</span></div>"+
+    '<div class="stat"><span>H1 drugs this month</span><b>'+h1M+"</b><span>entries</span></div>"+
+    '<div class="stat'+(stDone?"":" flag")+'"><span>Sterilisation today</span><b>'+(stDone?"Done":"Due")+"</b><span>A shift, mandatory</span></div>"+
+    "</div>"+
+    "<h2>Registers</h2><div class=\"shelf\">"+ORDER.map(k=>{
+      const R=REGS[k],s=v(k).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")),last=s[0];
+      return '<div class="shelfitem"><a class="t" href="#'+k+'"><h3>'+esc(R.name)+'</h3></a><div class="meta"><span class="mono">'+s.length+"</span> entries"+(last?" · last "+esc(fmtDate(last.date)):" · none yet")+'</div><div class="row"><button type="button" class="btn primary sm" data-a="new" data-v="'+k+'">+ New entry</button><a class="btn sm" style="text-decoration:none" href="#'+k+'">Open</a></div></div>';
+    }).join("")+"</div>"+
+    '<div class="panels">'+
+    '<section class="panel-box"><h2>Low stock</h2>'+(low.length?low.map((s,i)=>'<div class="lowrow"><div><b>'+esc(s.name)+(s.strength?" "+esc(s.strength):"")+"</b><small>"+s.closing+" left · reorder at "+s.reorder+'</small></div><button type="button" class="btn sm" data-a="addreq" data-v="'+i+'">Add to order list</button></div>').join(""):'<p class="hint">Nothing is low. Set a reorder level when logging a medicine and alerts show up here.</p>')+"</section>"+
+    '<section class="panel-box"><h2>Today by shift</h2><div class="bars">'+SHIFTS.map(s=>'<div class="bar-row"><span>'+esc(s[1])+'</span><b class="mono">'+byShift[s[0]]+'</b><div class="track"><i style="width:'+Math.min(100,byShift[s[0]]*10)+'%"></i></div></div>').join("")+'</div><p class="hint" style="margin-top:8px">Entries made today across all registers.</p></section>'+
+    '<section class="panel-box"><h2>Common complaints, '+esc(mon)+"</h2>"+(top.length?'<div class="bars">'+top.map(x=>'<div class="bar-row"><span>'+esc(x[0])+'</span><b class="mono">'+x[1]+'</b><div class="track"><i style="width:'+Math.round(x[1]/maxc*100)+'%"></i></div></div>').join("")+"</div>":'<p class="hint">Complaints from this month\'s OPD visits are counted here.</p>')+"</section>"+
+    '<section class="panel-box"><h2>Bio-medical waste, '+esc(mon)+'</h2><div class="bmw">'+["Yellow","Red","White","Blue","Liquid"].map(c=>'<div><span class="sw sw-'+c+'"></span>'+c+"<b>"+(Math.round(bw[c]*100)/100)+(c==="Liquid"?" L":" kg")+"</b></div>").join("")+"</div></section>"+
+    "</div>";
+  overviewLow=low;
+}
+let overviewLow=[];
+
+/* ===================== registers ===================== */
+const BMW=[
+  ["Yellow","Anatomical and soiled waste, expired medicines, chemical waste"],
+  ["Red","Contaminated plastics: IV sets, tubing, catheters, gloves, syringes without needle"],
+  ["White","Sharps: needles, syringes with needle, blades, lancets"],
+  ["Blue","Glassware: vials, ampoules, broken glass, metal implants"],
+  ["Liquid","Liquid waste: washings, disinfectant, chemical liquid (measured in litres)"]
+];
+function filtered(k,useUi){
+  const u=useUi===false?{q:"",month:"",shift:"",site:""}:ui(k),q=lc(u.q);
+  return vis(k).filter(e=>{
+    if(u.month&&(e.date||"").slice(0,7)!==u.month)return false;
+    if(u.shift&&e.shift!==u.shift)return false;
+    if(k==="waste"&&u.site&&e.site!==u.site)return false;
+    if(!q)return true;
+    return Object.keys(e).some(x=>x!=="id"&&x!=="snapshot"&&String(e[x]).toLowerCase().indexOf(q)>=0);
+  }).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.time||"").localeCompare(a.time||"")||(b.sr||0)-(a.sr||0));
+}
+function renderRegister(k){
+  const R=REGS[k],u=ui(k);
+  $("#view").innerHTML=
+    '<div class="reg-head"><div><div class="eyebrow">Register</div><h1>'+esc(R.name)+"</h1><p>"+esc(R.hint)+'</p></div><button type="button" class="btn primary" data-a="new" data-v="'+k+'">+ New entry</button></div>'+
+    '<div id="extras"></div>'+
+    '<div class="tools"><input id="q" type="search" placeholder="Search name, ID, complaint, medicine" aria-label="Search" value="'+esc(u.q)+'">'+
+    '<label>Month<input id="mon" type="month" value="'+esc(u.month)+'"></label>'+
+    '<label>Shift<select id="shf"><option value="">All shifts</option>'+SHIFTS.map(s=>'<option value="'+s[0]+'"'+(u.shift===s[0]?" selected":"")+">"+esc(s[1])+"</option>").join("")+"</select></label>"+
+    (k==="waste"?'<label>Site<select id="sit"><option value="">All sites</option>'+SITES.map(s=>'<option'+(u.site===s?" selected":"")+">"+esc(s)+"</option>").join("")+"</select></label>":"")+"</div>"+
+    '<div class="tools"><button type="button" class="btn primary sm" data-a="xl" data-v="'+k+'">Download Excel</button><button type="button" class="btn sm" data-a="pdf" data-v="'+k+'">Download PDF</button>'+(k==="doctor"?'<button type="button" class="btn sm" data-a="docs">Manage doctors</button>':"")+"</div>"+
+    '<p id="count" class="count"></p><div id="list"></div>';
+  $("#q").addEventListener("input",e=>{u.q=e.target.value;u.limit=100;renderList(k)});
+  $("#mon").addEventListener("input",e=>{u.month=e.target.value;u.limit=100;renderList(k);renderExtras(k)});
+  $("#shf").addEventListener("change",e=>{u.shift=e.target.value;u.limit=100;renderList(k)});
+  const st=$("#sit");if(st)st.addEventListener("change",e=>{u.site=e.target.value;u.limit=100;renderList(k);renderExtras(k)});
+  renderExtras(k);renderList(k);
+}
+function renderExtras(k){
+  const el=$("#extras");if(!el)return;
+  if(k==="medicine"){
+    const s=stocks();
+    el.innerHTML="<h2>Current stock</h2><div class=\"stock\">"+(s.length?s.map(x=>'<span class="stockchip'+(x.low?" low":"")+'">'+esc(x.name)+(x.strength?" "+esc(x.strength):"")+" <b>"+x.closing+"</b></span>").join(""):'<p class="hint">Stock for each medicine appears here after the first entry.</p>')+"</div>";
+  }else if(k==="waste"){
+    const u=ui("waste"),ym=u.month||todayStr().slice(0,7),bw={Yellow:0,Red:0,White:0,Blue:0,Liquid:0};
+    vis("waste").forEach(e=>{if((e.date||"").slice(0,7)===ym&&(!u.site||e.site===u.site)&&bw[e.category]!=null)bw[e.category]+=Number(e.qty)||0});
+    el.innerHTML="<h2>"+(u.month?"Selected month":"This month")+(u.site?" · "+esc(u.site):"")+'</h2><div class="bmw" style="margin-bottom:12px">'+BMW.map(b=>'<div><span class="sw sw-'+b[0]+'"></span>'+b[0]+"<b>"+(Math.round(bw[b[0]]*100)/100)+(b[0]==="Liquid"?" L":" kg")+"</b><small>"+esc(b[1])+"</small></div>").join("")+"</div>";
+  }else if(k==="steril"){
+    const done=S.reg.steril.some(e=>e.date===todayStr()&&e.shift==="A");
+    el.innerHTML='<div class="alert'+(done?"":" bad")+'" style="margin-bottom:12px;'+(done?"background:var(--goodbg);color:var(--good);border-color:var(--good)":"")+'"><span>'+(done?"Today's A shift sterilisation is recorded.":"Today's A shift sterilisation is not recorded yet.")+"</span></div>";
+  }else el.innerHTML="";
+}
+function renderList(k){
+  const el=$("#list");if(!el)return;
+  const R=REGS[k],u=ui(k),rows=filtered(k),shown=rows.slice(0,u.limit);
+  $("#count").textContent=rows.length+(rows.length===1?" entry":" entries")+(u.month?" in "+monthLabel(u.month):"")+(u.shift?" · "+u.shift+" shift":"")+(u.q?" matching “"+u.q+"”":"");
+  if(!rows.length){
+    el.innerHTML=vis(k).length?'<div class="empty"><p>Nothing matches these filters.</p></div>':'<div class="empty"><p>'+esc(R.empty)+'</p><button type="button" class="btn primary" data-a="new" data-v="'+k+'">+ Add first entry</button></div>';
+    return;
+  }
+  const head="<tr><th>Sr</th>"+R.cols.map(c=>"<th>"+esc(colLabel(k,c))+"</th>").join("")+"</tr>";
+  const body=shown.map(e=>'<tr tabindex="0" role="button" data-a="edit" data-v="'+k+":"+esc(e.id)+'"><td class="sr">'+srFmt(e.sr)+"</td>"+R.cols.map(c=>"<td"+(c==="qty"||c==="opening"||c==="closing"||c==="stock"?' class="num"':"")+">"+cellHTML(k,c,e)+"</td>").join("")+"</tr>").join("");
+  const cards=shown.map(e=>{
+    const c=cardInfo(k,e);
+    return '<div class="card" tabindex="0" role="button" data-a="edit" data-v="'+k+":"+esc(e.id)+'"><div class="c-top"><span class="sr">'+srFmt(e.sr)+"</span><h3>"+c.title+"</h3>"+(c.chip?'<span class="chip t-'+tone(c.chip)+'">'+esc(c.chip)+"</span>":"")+"</div>"+(c.sub?'<div class="c-sub">'+c.sub+"</div>":"")+'<div class="c-body">'+c.body+'</div><div class="c-time">'+esc(c.when)+(e.uname?" · "+esc(e.uname):"")+"</div></div>";
+  }).join("");
+  el.innerHTML='<div class="tablewrap"><table><thead>'+head+"</thead><tbody>"+body+'</tbody></table></div><div class="cards">'+cards+"</div>"+(rows.length>shown.length?'<button type="button" class="btn more" data-a="more" data-v="'+k+'">Show more ('+(rows.length-shown.length)+" older)</button>":"");
+}
+
+/* ===================== data page ===================== */
+function storageKB(){
+  let n=0;
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf("ohc_")===0)n+=k.length+(localStorage.getItem(k)||"").length}}catch(e){}
+  return Math.round(n*2/1024);
+}
+function renderData(){
+  const admin=isAdmin();
+  let h='<div class="reg-head"><div><div class="eyebrow">Master data</div><h1>Data and backup</h1><p>Export and import everything, download all registers, manage dropdown lists and see the deletion history.</p></div></div>';
+  h+='<div class="panels">';
+  if(CLOUD)h+='<section class="panel-box"><h2>Cloud data</h2><p class="hint" style="margin-bottom:10px">Sabhi entries cloud database mein save hoti hain. Browser history ya phone ka data delete hone par bhi apne code se kisi bhi phone ya computer se login karke data wapas mil jata hai. Staff ko sirf apni entries dikhti hain.</p><div class="btnrow"><button type="button" class="btn primary" data-a="syncnow">Sync now</button><button type="button" class="btn" data-a="bak">Export all data (backup file)</button><label class="btn filebtn">Import file<input id="impFile" type="file" accept=".json,application/json" hidden></label></div><p class="hint" style="margin-top:10px">Naya staff add karne ya code reset karne ke baad kuch aur karne ki zaroorat nahi: naya code turant har device par chalta hai. Purana code usi waqt band ho jata hai.</p></section>';
+  else h+='<section class="panel-box"><h2>Master data</h2><p class="hint" style="margin-bottom:10px">Entries live in this browser on this device. Save a backup file every week. Importing adds new entries and never removes anything.</p><div class="btnrow"><button type="button" class="btn primary" data-a="bak">Export all data</button>'+(admin?'<button type="button" class="btn" data-a="setupfile">Export staff setup file</button>':"")+'<label class="btn filebtn">Import file<input id="impFile" type="file" accept=".json,application/json" hidden></label></div><p class="hint" style="margin-top:10px">Staff setup file: staff profiles, login codes, doctors and dropdown lists only. Import it on each staff device. Send entries back with Export all data and import them on the admin device.</p><p class="hint" style="margin-top:8px">Device storage used: about '+storageKB()+" KB of roughly 5000 KB.</p></section>";
+  if(SHEET_ON&&admin)h+='<section class="panel-box"><h2>Google Sheet</h2><p class="hint" style="margin-bottom:10px">Har nayi ya badli hui entry apne aap Google Sheet mein bhi save hoti hai (har register ka alag tab). Delete hui entry sheet mein "DELETED" likh kar rehti hai.</p><button type="button" class="btn" data-a="sheetall">Send all entries to Google Sheet</button></section>';
+  h+='<section class="panel-box"><h2>Download everything</h2><p class="hint" style="margin-bottom:10px">One Excel file with every register on its own sheet. Each register can also be downloaded separately, in Excel or PDF, from its own page.</p><div class="btnrow"><button type="button" class="btn primary" data-a="xlall">All registers (Excel)</button></div></section>';
+  h+="</div>";
+  h+='<h2 style="margin-top:22px">Dropdown lists</h2><section class="panel-box">'+Object.keys(DEF_LISTS).map(key=>'<div class="listrow"><b>'+esc(LIST_LABELS[key])+'</b><div class="pills">'+S.lists[key].map((x,i)=>'<span class="pill">'+esc(x)+'<button type="button" data-a="listdel" data-v="'+key+"|"+i+'" aria-label="Remove '+esc(x)+'">&times;</button></span>').join("")+'</div><div class="addline"><input data-list="'+key+'" placeholder="Add an option" aria-label="Add to '+esc(LIST_LABELS[key])+'"><button type="button" class="btn sm" data-a="listadd" data-v="'+key+'">Add</button></div></div>').join("")+"</section>";
+  if(admin){
+    const a=S.audit.slice().sort((x,y)=>y.ts-x.ts);
+    h+='<div class="reg-head" style="margin-top:22px"><div><h2 style="margin:0">Deletion history</h2><p>Every deletion is kept here with who did it and when. It cannot be edited or deleted from this app.</p></div>'+(a.length?'<button type="button" class="btn sm" data-a="auditxl">Download Excel</button>':"")+"</div>";
+    h+=a.length?'<div class="tablewrap" style="display:block"><table><thead><tr><th>When</th><th>Deleted by</th><th>Type</th><th>Details</th></tr></thead><tbody>'+a.slice(0,200).map(x=>'<tr style="cursor:default"><td class="num">'+esc(new Date(x.ts).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"2-digit",hour:"2-digit",minute:"2-digit"}))+"</td><td>"+esc(x.byName)+"</td><td>"+esc(x.kind)+"</td><td>"+esc(x.label)+"</td></tr>").join("")+"</tbody></table></div>":'<div class="empty"><p>No deletions so far.</p></div>';
+  }
+  $("#view").innerHTML=h;
+}
+async function deleteListItem(key,idx){
+  const val=S.lists[key][idx];if(val==null)return;
+  const ok=await askCode('Remove "'+val+'" from '+LIST_LABELS[key]+"?");if(!ok)return;
+  if(!logDelete("Dropdown option",{id:newId("l"),list:key,value:val},LIST_LABELS[key]+": "+val))return;
+  S.lists[key].splice(idx,1);sv("ohc_lists",S.lists);renderData();toast("Option removed. Recorded in history.");
+}
+
+/* ===================== Excel + PDF ===================== */
+const PERSON_COLS=PF.map(p=>({l:p.l,get:e=>e[p.k]==null?"":e[p.k]}));
+function xlCols(k){
+  const R=REGS[k],out=[{l:"Sr No",get:e=>e.sr,sr:1}];
+  R.fields.forEach(f=>{
+    if(f.t==="person"){PERSON_COLS.forEach(c=>out.push(c));return}
+    out.push({l:f.l,get:e=>{const v=e[f.k];if(v==null)return "";return f.t==="date"?dmy(v):v},tone:TONEK.has(f.k),cat:k==="waste"&&f.k==="category"});
+  });
+  out.push({l:"Shift",get:e=>e.shift||""},{l:"Duty location",get:e=>e.dloc||""},{l:"Staff nurse on duty",get:e=>e.duty||""},{l:"Entered by",get:e=>e.uname||""});
+  return out;
+}
+function pdfCols(k){
+  const R=REGS[k];
+  return [{l:"Sr",get:e=>srFmt(e.sr)}].concat(R.cols.map(c=>({l:colLabel(k,c),get:e=>cellText(k,c,e),tone:TONEK.has(c),cat:k==="waste"&&c==="category"})));
+}
+function whoAndWhen(){return "Generated "+new Date().toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})+" by "+((curUser()||{}).name||"")}
+function regSheet(k,mode,useUi){
+  const R=REGS[k],u=useUi===false?{month:"",shift:"",site:""}:ui(k);
+  const rows=filtered(k,useUi).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.sr||0)-(b.sr||0));
+  const subs=["Period: "+(u.month?monthLabel(u.month):"All dates"),"Shift: "+(u.shift||"All")];
+  if(k==="waste")subs.push("Site: "+(u.site||"All sites"));
+  subs.push("Entries: "+rows.length);
+  return {name:R.tab,title:R.name,sub:subs.join("   |   ")+"   |   "+whoAndWhen(),cols:mode==="xl"?xlCols(k):pdfCols(k),rows:rows,sign:true,tag:u.month||"all"};
+}
+function fileName(title,tag,ext){return (CENTRE+"_"+title+"_"+tag).replace(/[^A-Za-z0-9_.-]+/g,"-")+"."+ext}
+function saveBlob(blob,name){
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+const TONE_X={good:["FFDFF2E4","FF1D7A3C"],warn:["FFFBE9CD","FF8F4A00"],bad:["FFFBE0DD","FFB3261E"]};
+const CAT_X={Yellow:["FFFFE066","FF3A2F00"],Red:["FFE35D52","FFFFFFFF"],White:["FFFFFFFF","FF1B1830"],Blue:["FF5B8FD6","FFFFFFFF"],Liquid:["FF7CCFD0","FF06302F"]};
+const argb2rgb=a=>[parseInt(a.slice(2,4),16),parseInt(a.slice(4,6),16),parseInt(a.slice(6,8),16)];
+async function buildXlsx(sheets,filename){
+  if(!window.ExcelJS){toast("The Excel library did not load. Connect to the internet and try again.");return}
+  try{
+    const wb=new ExcelJS.Workbook();wb.creator=DESIGNER;wb.created=new Date();
+    const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:c}});
+    const border={top:{style:"thin",color:{argb:"FFD9D3E8"}},left:{style:"thin",color:{argb:"FFD9D3E8"}},bottom:{style:"thin",color:{argb:"FFD9D3E8"}},right:{style:"thin",color:{argb:"FFD9D3E8"}}};
+    sheets.forEach(sh=>{
+      const ws=wb.addWorksheet(sh.name.slice(0,31).replace(/[\\\/?*\[\]:]/g,"-"),{views:[{state:"frozen",ySplit:5}],pageSetup:{orientation:"landscape",paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
+      const n=Math.max(sh.cols.length,4);
+      ws.mergeCells(1,1,1,n);const a=ws.getCell(1,1);a.value=CENTRE+", "+LOC;a.font={bold:true,size:18,color:{argb:"FFFFFFFF"}};a.fill=fill("FF0B74B0");a.alignment={horizontal:"center",vertical:"middle"};ws.getRow(1).height=32;
+      ws.mergeCells(2,1,2,n);const b=ws.getCell(2,1);b.value=sh.title;b.font={bold:true,size:14,color:{argb:"FFFFFFFF"}};b.fill=fill("FF75479C");b.alignment={horizontal:"center",vertical:"middle"};ws.getRow(2).height=24;
+      ws.mergeCells(3,1,3,n);const c3=ws.getCell(3,1);c3.value=sh.sub||"";c3.font={italic:true,size:10,color:{argb:"FF5B5873"}};c3.fill=fill("FFF1EAF7");c3.alignment={horizontal:"center",vertical:"middle"};ws.getRow(3).height=18;
+      ws.getRow(4).height=6;
+      const hr=ws.getRow(5);hr.height=26;
+      sh.cols.forEach((c,i)=>{const cell=hr.getCell(i+1);cell.value=c.l;cell.font={bold:true,color:{argb:"FFFFFFFF"}};cell.fill=fill("FFBD3861");cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};cell.border=border});
+      const widths=sh.cols.map(c=>Math.max(8,String(c.l).length+2));
+      sh.rows.forEach((e,ri)=>{
+        const row=ws.getRow(6+ri);
+        sh.cols.forEach((c,i)=>{
+          let v=c.get(e);if(v==null)v="";
+          const cell=row.getCell(i+1);cell.value=v;
+          cell.border=border;cell.alignment={vertical:"top",wrapText:true,horizontal:c.sr?"center":undefined};
+          cell.font={size:10,color:{argb:"FF1B1830"}};
+          if(ri%2===1)cell.fill=fill("FFF6F1FA");
+          if(c.tone&&v!==""){const t=tone(v);if(t){cell.fill=fill(TONE_X[t][0]);cell.font={size:10,bold:true,color:{argb:TONE_X[t][1]}}}}
+          if(c.cat&&CAT_X[v]){cell.fill=fill(CAT_X[v][0]);cell.font={size:10,bold:true,color:{argb:CAT_X[v][1]}}}
+          const len=String(v).length;if(len+2>widths[i])widths[i]=Math.min(46,len+2);
+        });
+      });
+      widths.forEach((w,i)=>{ws.getColumn(i+1).width=w});
+      ws.autoFilter={from:{row:5,column:1},to:{row:5,column:sh.cols.length}};
+      if(sh.sign){
+        const r=6+sh.rows.length+2;
+        ws.mergeCells(r,1,r,Math.max(2,Math.floor(n/2)));ws.getCell(r,1).value="Staff Nurse (Sign): ____________________";
+        ws.mergeCells(r,Math.floor(n/2)+1,r,n);ws.getCell(r,Math.floor(n/2)+1).value="Medical Officer / In-charge (Sign): ____________________";
+        [ws.getCell(r,1),ws.getCell(r,Math.floor(n/2)+1)].forEach(c=>{c.font={bold:true,size:10,color:{argb:"FF1B1830"}}});
+        const f=r+2;ws.mergeCells(f,1,f,n);const fc=ws.getCell(f,1);fc.value="Designed by "+DESIGNER+"  |  Healing Everyone";fc.font={italic:true,size:9,color:{argb:"FF5B5873"}};fc.alignment={horizontal:"center"};
+      }
+    });
+    const buf=await wb.xlsx.writeBuffer();
+    saveBlob(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),filename);
+    toast("Excel downloaded");
+  }catch(e){toast("Could not build the Excel file.")}
+}
+const pt=s=>String(s==null?"":s).replace(/₂/g,"2").replace(/→/g,"->").replace(/[^\x20-\x7E\xA0-\xFF–—‘’“”•\n]/g,"");
+function buildPdf(sh,filename){
+  if(!window.jspdf||!window.jspdf.jsPDF){toast("The PDF library did not load. Connect to the internet and try again.");return}
+  try{
+    const doc=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    if(typeof doc.autoTable!=="function"){toast("The PDF table library did not load.");return}
+    const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+    const header=()=>{
+      doc.setFillColor(11,116,176);doc.rect(0,0,W,16,"F");
+      doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(16);doc.text(pt(CENTRE+", "+LOC),W/2,10.8,{align:"center"});
+      doc.setFillColor(117,71,156);doc.rect(0,16,W,10,"F");doc.setFontSize(12);doc.text(pt(sh.title),W/2,22.8,{align:"center"});
+      doc.setFillColor(189,56,97);doc.rect(0,26,W,1.3,"F");
+    };
+    doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(91,88,115);doc.text(pt(sh.sub||""),W/2,32,{align:"center"});
+    const TF={good:[[223,242,228],[29,122,60]],warn:[[251,233,205],[143,74,0]],bad:[[251,224,221],[179,38,30]]};
+    doc.autoTable({
+      head:[sh.cols.map(c=>pt(c.l))],
+      body:sh.rows.map(e=>sh.cols.map(c=>pt(c.get(e)))),
+      startY:35,theme:"grid",
+      styles:{fontSize:7.5,cellPadding:1.6,lineColor:[217,211,232],lineWidth:0.1,textColor:[27,24,48],overflow:"linebreak",valign:"top"},
+      headStyles:{fillColor:[189,56,97],textColor:[255,255,255],fontStyle:"bold",halign:"center"},
+      alternateRowStyles:{fillColor:[246,241,250]},
+      margin:{top:30,left:8,right:8,bottom:16},
+      didParseCell:d=>{
+        if(d.section!=="body")return;
+        const c=sh.cols[d.column.index],raw=d.cell.raw;
+        if(c&&c.tone){const t=tone(raw);if(t){d.cell.styles.fillColor=TF[t][0];d.cell.styles.textColor=TF[t][1];d.cell.styles.fontStyle="bold"}}
+        if(c&&c.cat&&CAT_X[raw]){d.cell.styles.fillColor=argb2rgb(CAT_X[raw][0]);d.cell.styles.textColor=argb2rgb(CAT_X[raw][1]);d.cell.styles.fontStyle="bold"}
+      },
+      didDrawPage:()=>header()
+    });
+    if(sh.sign){
+      let y=(doc.lastAutoTable?doc.lastAutoTable.finalY:40)+16;
+      if(y>H-24){doc.addPage();header();y=44}
+      doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(27,24,48);
+      doc.text("Staff Nurse (Sign): ______________________",12,y);
+      doc.text("Medical Officer / In-charge (Sign): ______________________",W-12,y,{align:"right"});
+    }
+    const n=doc.getNumberOfPages();
+    for(let i=1;i<=n;i++){
+      doc.setPage(i);doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(91,88,115);
+      doc.text(pt("Designed by "+DESIGNER+"  |  Healing Everyone"),8,H-7);
+      doc.text(pt(whoAndWhen()),W/2,H-7,{align:"center"});
+      doc.text("Page "+i+" of "+n,W-8,H-7,{align:"right"});
+    }
+    doc.save(filename);
+    toast("PDF downloaded");
+  }catch(e){toast("Could not build the PDF file.")}
+}
+function exportReg(k,fmt){
+  const sh=regSheet(k,fmt==="xl"?"xl":"pdf");
+  if(!sh.rows.length){toast("Nothing to export for these filters");return}
+  if(fmt==="xl")buildXlsx([sh],fileName(REGS[k].name,sh.tag,"xlsx"));
+  else buildPdf(sh,fileName(REGS[k].name,sh.tag,"pdf"));
+}
+function exportAllXl(){
+  const sheets=ORDER.map(k=>regSheet(k,"xl",false)).filter(s=>s.rows.length);
+  if(!sheets.length){toast("Nothing to export yet");return}
+  buildXlsx(sheets,fileName("All-Registers",todayStr(),"xlsx"));
+}
+function staffSheet(){
+  return {name:"Team",title:"Staff List",sub:"Staff: "+S.staff.length+"   |   "+whoAndWhen(),sign:false,tag:todayStr(),
+    cols:[{l:"Name",get:e=>e.name},{l:"Position",get:e=>e.position||""},{l:"Designation",get:e=>e.designation||""},{l:"Education",get:e=>e.education||""},{l:"Phone",get:e=>e.phone||""},{l:"Posting",get:e=>e.site||""}],
+    rows:S.staff.filter(s=>s.active!==false)};
+}
+function auditSheet(){
+  return {name:"Deletion history",title:"Deletion History",sub:"Entries: "+S.audit.length+"   |   "+whoAndWhen(),sign:false,tag:todayStr(),
+    cols:[{l:"When",get:e=>new Date(e.ts).toLocaleString("en-IN")},{l:"Deleted by",get:e=>e.byName},{l:"Type",get:e=>e.kind},{l:"Details",get:e=>e.label}],
+    rows:S.audit.slice().sort((a,b)=>b.ts-a.ts)};
+}
+
+/* ===================== master data import / export ===================== */
+function exportBackup(kind){
+  const data={reg:{},staff:S.staff,doctors:S.doctors,lists:S.lists,notes:S.notes,audit:S.audit,cfg:{salt:S.cfg.salt}};
+  ORDER.forEach(k=>{data.reg[k]=S.reg[k]});
+  if(kind==="setup"){data.reg={};data.notes=[];data.audit=[]}
+  const o={app:"ohc-register-desk",ver:2,kind:kind,saved:new Date().toISOString(),data:data};
+  saveBlob(new Blob([JSON.stringify(o)],{type:"application/json"}),"North-Cluster-OHC_"+(kind==="setup"?"staff-setup":"all-data")+"_"+todayStr()+".json");
+  toast(kind==="setup"?"Staff setup file saved":"Backup file saved");
+}
+function importData(o){
+  if(!o||o.app!=="ohc-register-desk"||!o.data)throw new Error("bad");
+  const d=o.data,regs=d.reg||(ORDER.some(k=>Array.isArray(d[k]))?d:{});
+  let added=0;
+  /* deletion history first, so deleted items are never brought back */
+  const am=new Map(S.audit.map(a=>[a.id,a]));
+  (d.audit||[]).forEach(a=>{if(a&&a.id&&!am.has(a.id))am.set(a.id,a)});
+  S.audit=Array.from(am.values()).sort((a,b)=>a.ts-b.ts);sv("ohc_audit",S.audit);
+  const gone=new Set(S.audit.map(a=>a.recId));
+  ORDER.forEach(k=>{
+    const inc=Array.isArray(regs[k])?regs[k]:[];if(!inc.length)return;
+    const cur=new Map(S.reg[k].map(e=>[e.id,e])),used=new Set(S.reg[k].map(e=>e.sr));
+    let maxsr=S.reg[k].reduce((m,e)=>Math.max(m,e.sr||0),0);
+    inc.forEach(e=>{
+      if(!e||!e.id||gone.has(e.id))return;
+      const x=cur.get(e.id);
+      if(x){if((e.updatedAt||0)>(x.updatedAt||0))cur.set(e.id,e);return}
+      if(used.has(e.sr))e.sr=++maxsr;
+      used.add(e.sr);cur.set(e.id,e);added++;
+    });
+    S.reg[k]=Array.from(cur.values());persist(k);
+  });
+  let staffNote="";
+  const hasUsers=S.staff.some(s=>s.codeHash);
+  let saltOk=true;
+  if(d.cfg&&d.cfg.salt&&d.cfg.salt!==S.cfg.salt){
+    if(!hasUsers){S.cfg.salt=d.cfg.salt;sv("ohc_cfg",S.cfg)}else saltOk=false;
+  }
+  if(saltOk){
+    const mergeBy=(cur,inc)=>{const m=new Map(cur.map(x=>[x.id,x]));(inc||[]).forEach(x=>{if(!x||!x.id||gone.has(x.id))return;const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)});return Array.from(m.values())};
+    if(Array.isArray(d.staff)){S.staff=mergeBy(S.staff,d.staff);sv("ohc_staff",S.staff)}
+    if(Array.isArray(d.doctors)){S.doctors=mergeBy(S.doctors,d.doctors);sv("ohc_doctors",S.doctors)}
+  }else if(Array.isArray(d.staff)&&d.staff.length){staffNote=" Staff list was not merged because it was set up on a different device.";}
+  if(d.lists)Object.keys(DEF_LISTS).forEach(k=>{if(Array.isArray(d.lists[k]))d.lists[k].forEach(v=>addOpt(k,v))});
+  if(Array.isArray(d.notes)){const m=new Map(S.notes.map(n=>[n.id,n]));d.notes.forEach(n=>{if(n&&n.id&&!gone.has(n.id)&&!m.has(n.id))m.set(n.id,n)});S.notes=Array.from(m.values());sv("ohc_notes",S.notes)}
+  return {added:added,staffNote:staffNote};
+}
+function importFile(file,after){
+  const fr=new FileReader();
+  fr.onerror=()=>toast("Could not read that file");
+  fr.onload=()=>{
+    let o;try{o=JSON.parse(fr.result);if(!o||o.app!=="ohc-register-desk")throw new Error("bad")}catch(e){toast("That is not an OHC backup or setup file");return}
+    try{const r=importData(o);toast("Imported. "+r.added+" new entries added."+r.staffNote);if(after)after()}catch(e){toast("Could not import that file")}
+  };
+  fr.readAsText(file);
+}
+
+/* ===================== events ===================== */
+const ACT={
+  close:()=>closeForm(),
+  gretry:()=>showGate(),
+  sheetall:()=>{sheetFlush(true).then(ok=>toast(ok?"Sab entries Google Sheet mein bhej di gayi":"Abhi nahi ja paya, baad mein try karein"))},
+  syncnow:()=>refreshCloud(true),
+  mcancel:()=>{if(modalRes)modalRes()},
+  lock:()=>lock(),
+  new:v=>openForm(v),
+  edit:v=>{const i=v.indexOf(":"),k=v.slice(0,i),id=v.slice(i+1),e=S.reg[k].find(x=>x.id===id);if(e)openForm(k,e)},
+  more:v=>{ui(v).limit+=100;renderList(v)},
+  xl:v=>exportReg(v,"xl"),
+  pdf:v=>exportReg(v,"pdf"),
+  xlall:()=>exportAllXl(),
+  bak:()=>exportBackup("full"),
+  setupfile:()=>exportBackup("setup"),
+  staffxl:()=>buildXlsx([staffSheet()],fileName("Staff-List",todayStr(),"xlsx")),
+  staffpdf:()=>buildPdf(staffSheet(),fileName("Staff-List",todayStr(),"pdf")),
+  auditxl:()=>buildXlsx([auditSheet()],fileName("Deletion-History",todayStr(),"xlsx")),
+  addreq:v=>{const s=overviewLow[Number(v)];if(s)openForm("requirement",null,{reason:"Low Stock",rowVals:{medicine:s.name,strength:s.strength,stock:s.closing}})},
+  newsteril:()=>openForm("steril"),
+  docs:()=>openDoctors(),
+  adddoc:()=>{$("#docrows").insertAdjacentHTML("beforeend",CTX.rowFn(null));const l=$("#docrows").lastElementChild.querySelector("input");if(l)l.focus()},
+  deldoc:(v,t)=>deleteDoctorRow(t),
+  addnote:()=>openNote(),
+  delnote:v=>removeNote(v),
+  addstaff:()=>openStaff(null),
+  editstaff:v=>openStaff(v),
+  delstaff:()=>deleteStaff(),
+  resetcode:()=>resetCode(),
+  rmphoto:()=>{if(CTX&&CTX.kind==="staff"){CTX.photo="";$("#photoPrev").innerHTML=avaHTML({name:(document.querySelector('#form [data-k="name"]')||{}).value||"?"},72)}},
+  addrow:()=>addRow(),
+  delrow:(v,t)=>{const r=t.closest(".rowcard");if(r&&document.querySelectorAll("#rows .rowcard").length>1){r.remove();renumRows();recalc()}},
+  chip:(v,t)=>{const ta=t.closest(".fld").querySelector("textarea");ta.value=(ta.value.trim()?ta.value.trim().replace(/[,;]$/,"")+", ":"")+v;ta.focus()},
+  savemode:v=>{if(CTX)CTX.cont=v==="cont"},
+  delentry:()=>deleteEntry(),
+  listdel:v=>{const p=v.split("|");deleteListItem(p[0],Number(p[1]))},
+  listadd:(v,t)=>{
+    const inp=t.closest(".addline").querySelector("input"),val=inp.value.trim();
+    if(!val)return;
+    if(S.lists[v].some(x=>lc(x)===lc(val))){toast("That option already exists");return}
+    addOpt(v,val);renderData();toast("Option added");
+  }
+};
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-a]");if(!t)return;
+  const fn=ACT[t.dataset.a];if(fn)fn(t.dataset.v,t,e);
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){if(!$("#modal").hidden){if(modalRes)modalRes();return}if(!$("#sheet").hidden)closeForm()}
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("tr[data-a],.card[data-a]")){e.preventDefault();e.target.click()}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="impFile"){const f=t.files&&t.files[0];if(f)importFile(f,()=>refresh());t.value="";return}
+  if(t.id==="dShift"){S.duty.shift=t.value;sv("ohc_duty",S.duty);toast("Shift set to "+t.value);return}
+  if(t.id==="dLoc"){S.duty.loc=t.value;sv("ohc_duty",S.duty);toast(t.value?"Duty location: "+t.value:"Duty location cleared");return}
+  if(t.id==="dNurse"){S.duty.nurse=t.value.trim();sv("ohc_duty",S.duty);return}
+  if(t.id==="photoIn"){
+    const f=t.files&&t.files[0];if(!f||!CTX||CTX.kind!=="staff")return;
+    resizeImage(f,240).then(url=>{CTX.photo=url;$("#photoPrev").innerHTML=avaHTML({name:(document.querySelector('#form [data-k="name"]')||{}).value||"?",photo:url},72)}).catch(()=>toast("Could not read that image"));
+    t.value="";return;
+  }
+  if(!CTX||CTX.kind!=="reg"||!t.closest("#form"))return;
+  const k=t.dataset&&t.dataset.k;
+  if(t.dataset&&t.dataset.dyn){
+    const n=t.closest(".fld").querySelector(".newopt");
+    if(n){n.hidden=t.value!=="__new__";if(!n.hidden)n.focus()}
+  }
+  if(k==="ptype")syncPerson();
+  if(k==="empId")autofillByEmp(t.value);
+  if(k==="reason"&&CTX.k==="requirement")syncReason();
+  if(k==="category"&&CTX.k==="waste")syncWaste();
+  if(k==="doctor"&&CTX.k==="doctor")fillDoctorPhone();
+  if(k==="type"||k==="medicine"||k==="strength"||k==="qty"||k==="opening")recalc();
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(!CTX||CTX.kind!=="reg"||!t.closest||!t.closest("#form"))return;
+  const k=t.dataset&&t.dataset.k;
+  if(k==="opening"||k==="stock"){if(t.closest(".rowcard"))t.dataset.manual="1"}
+  if(k==="qty"||k==="opening"||k==="medicine"||k==="strength")recalc();
+});
+$("#form").addEventListener("submit",submitForm);
+window.addEventListener("hashchange",route);
+
+/* ===================== start ===================== */
+function boot(){
+  if(CLOUD){startCloud();return}
+  loadAll();
+  const sid=(()=>{try{return sessionStorage.getItem("ohc_sid")||localStorage.getItem(LS_KEEP)}catch(e){return null}})();
+  if(sid&&S.staff.some(s=>s.id===sid&&s.codeHash&&s.active!==false))enter(sid,!!(()=>{try{return localStorage.getItem(LS_KEEP)}catch(e){return null}})());
+  else showGate();
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
